@@ -1,0 +1,14 @@
+[package]
+authors = ["Henri Bourcereau <henri@bourcereau.fr>"]
+description = "A library to model the valley card game."
+keywords = ["game", "cards"]
+license = "MIT"
+name = "thevalley_game"
+version = "0.1.0"
+edition="2018"
+
+[dependencies]
+serde = { version = "1.0.105", features = ["derive", "rc"] }
+rand = "0.7.3"
+strum = "0.18.0"
+strum_macros = "0.18.0"

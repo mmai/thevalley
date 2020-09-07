@@ -1,0 +1,12 @@
+[package]
+name = "thevalley_protocol"
+version = "0.1.0"
+authors = ["Henri Bourcereau <henri@bourcereau.fr>"]
+edition = "2018"
+
+[dependencies]
+serde = { version = "1.0.105", features = ["derive", "rc"] }
+uuid = { version = "0.8.1", features = ["serde"] }
+thevalley_game = { path = "../game" }
+webgame_protocol = { path = "../../webgame/webgame_protocol" }
+# webgame_protocol = { git = "https://github.com/mmai/webgame"}

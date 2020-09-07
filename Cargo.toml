@@ -1,0 +1,3 @@
+[workspace]
+# members = ["thevalley_server", "thevalley_protocol", "thevalley_client", "thevalley_game"]
+members = ["server", "protocol", "client", "game"]
