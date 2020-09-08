@@ -7,8 +7,8 @@ use yew::{
 };
 
 use crate::api::Api;
-use crate::protocol::{AuthenticateCommand, Command, Message};
-use crate::gprotocol::{PlayerInfo};
+use crate::protocol::{Command, Message};
+use crate::gprotocol::{AuthenticateCommand, PlayerInfo};
 
 #[derive(Clone, PartialEq, Properties)]
 pub struct Props {
@@ -78,7 +78,7 @@ impl Component for StartPage {
         let nickname_placeholder_text = tr!("nickname");
         html! {
             <div class="wrapper">
-                <h1>{ tr!("Let's play Tarot together") }</h1>
+                <h1>{ tr!("Let's play The Valley") }</h1>
                 <p class="explanation">
                     { tr!("Give yourself a nickname to play:") }
                 </p>

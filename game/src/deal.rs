@@ -115,10 +115,6 @@ impl DealState {
         Ok(result)
     }
 
-    fn get_opponent(&self) -> &pos::PlayerPos {
-        &pos::PlayerPos::P0
-    }
-
     /// Returns the player expected to play next.
     pub fn next_player(&self) -> pos::PlayerPos {
         self.current
@@ -161,11 +157,11 @@ impl DealState {
 
 /// Returns `true` if the move appear legal.
 pub fn can_play(
-    p: pos::PlayerPos,
+    _p: pos::PlayerPos,
     card: cards::Card,
     hand: cards::Hand,
-    trick: &trick::Trick,
-    is_first_trick:bool,
+    _trick: &trick::Trick,
+    _is_first_trick:bool,
 ) -> Result<(), PlayError> {
     // First, we need the card to be able to play
     if !hand.has(card) {

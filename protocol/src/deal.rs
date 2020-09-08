@@ -10,8 +10,8 @@ pub enum Deal {
 
 impl Deal {
     // Creates a new deal, starting with an auction.
-    pub fn new(first: pos::PlayerPos) -> Self {
-        let (hands, river) = deal_hands();
+    pub fn new(_first: pos::PlayerPos) -> Self {
+        let (hands, _river) = deal_hands();
         Deal::Playing(deal::DealState::new(pos::PlayerPos::P0, hands))
     }
 

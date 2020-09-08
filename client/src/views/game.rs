@@ -15,16 +15,15 @@ use crate::api::Api;
 use crate::components::chat_box::{ChatBox, ChatLine, ChatLineData};
 use crate::components::player_list::PlayerList;
 use crate::components::scores::Scores;
-use crate::gprotocol::{GameInfo, PlayerInfo};
+use crate::gprotocol::{GameInfo, PlayerInfo, SendTextCommand};
 use crate::protocol::{
     Command, GamePlayerState, GameStateSnapshot, Message, PlayerAction,
-    SendTextCommand,
     GamePlayCommand,
-    BidCommand, PlayCommand,
+    PlayCommand,
     Turn,
     PlayEvent,
 };
-use tarotgame::{bid, cards};
+use thevalley_game::cards;
 use crate::utils::format_join_code;
 use crate::sound_player::SoundPlayer;
 
@@ -43,7 +42,6 @@ pub struct GamePage {
     player_info: PlayerInfo,
     game_state: Rc<GameStateSnapshot>,
     chat_log: Vector<Rc<ChatLine>>,
-    dog: cards::Hand,
     hand: cards::Hand,
     is_waiting: bool,
     sound_player: SoundPlayer,
@@ -56,8 +54,6 @@ pub enum Msg {
     MarkReady,
     Continue,
     CloseError,
-    Bid(bid::Target),
-    Pass,
     Play(cards::Card),
     SetChatLine(String),
     AddToHand(cards::Card),
@@ -120,7 +116,6 @@ impl Component for GamePage {
             })),
             game_state: Rc::new(GameStateSnapshot::default()),
             player_info: props.player_info,
-            dog: cards::Hand::new(),
             hand: cards::Hand::new(),
             is_waiting: false,
             sound_player: SoundPlayer::new(sound_paths),
@@ -165,7 +160,6 @@ impl Component for GamePage {
                 Message::GameStateSnapshot(snapshot) => {
                     self.is_waiting = false;
                     self.game_state = Rc::new(snapshot);
-                    self.dog = self.game_state.deal.initial_dog;
                     self.hand = self.game_state.deal.hand;
                 }
                 _ => {}
@@ -191,30 +185,8 @@ impl Component for GamePage {
             Msg::Disconnect => {
                 self.api.send(Command::LeaveGame);
             }
-            Msg::Bid(target) => {
-                self.is_waiting = true;
-                log!("received bid {:?}", target);
-                self.api.send(Command::GamePlay(GamePlayCommand::Bid(BidCommand { target })));
-            }
-            Msg::Pass => {
-                self.is_waiting = true;
-                self.api.send(Command::GamePlay(GamePlayCommand::Pass));
-            }
-            Msg::CallKing(card) => {
-                self.is_waiting = true;
-                self.api.send(Command::GamePlay(GamePlayCommand::CallKing(CallKingCommand { card })));
-            }
             Msg::AddToHand(card) => {
                 self.hand.add(card);
-                self.dog.remove(card);
-            },
-            Msg::AddToDog(card) => {
-                self.dog.add(card);
-                self.hand.remove(card);
-            },
-            Msg::MakeDog => {
-                self.is_waiting = true;
-                self.api.send(Command::GamePlay(GamePlayCommand::MakeDog(MakeDogCommand { cards: self.dog })));
             },
             Msg::Play(card) => {
                 self.is_waiting = true;
@@ -291,12 +263,8 @@ impl Component for GamePage {
                            tr!("Contract failed by {0} points", diff_abs)
                        };
 
-                       let dog_message = tr!("Dog : {0}", self.game_state.deal.dog.to_string());
-
                        Some(html! {
                      <div>
-                         <div> {{ contract_message }} </div>
-                         <div> {{ dog_message }} </div>
                         <Scores players=players scores=scores />
                      </div>
                    })} else { None },
@@ -308,42 +276,25 @@ impl Component for GamePage {
             Turn::Pregame => tr!("pre-game"),
             Turn::Intertrick => tr!("inter trick"),
             Turn::Interdeal => tr!("inter deal"),
-            Turn::Bidding(_) => tr!("{0} bidding", player),
             Turn::Playing(_) => tr!("{0} playing", player),
             Turn::Endgame => tr!("end"),
-            Turn::CallingKing => tr!("calling king"),
-            Turn::MakingDog => tr!("making dog"),
         };
 
         html! {
     <div class=game_classes>
       <header>
         <p class="turn-info">{turn_info}</p>
-        {if let Some(contract) = &self.game_state.deal.contract {
-             let king_info = if let Some(king) = &self.game_state.deal.king {
-                format!(" ({})", king.to_string())
-             } else { "".into() };
-             html! {<p class="deal-info">{format!("{} {}", contract.to_string(), king_info)}</p>}
-        } else {
-             html! {}
-        }}
       </header>
 
       <PlayerList game_state=self.game_state.clone() players=others/>
 
         { if let Some(error) = &self.error  { 
             let error_str = match error.as_str() {
-            "bid: auctions are closed" => tr!("auctions are closed"),
-            "bid: invalid turn order" => tr!("invalid turn order"),
-            "bid: bid must be higher than current contract" => tr!("bid must be higher than current contract"),
-            "bid: the auction are still running" => tr!("the auction are still running"),
-            "bid: no contract was offered" => tr!("no contract was offered"),
             "play: invalid turn order" => tr!("invalid turn order"),
             "play: you can only play cards you have" => tr!("you can only play cards you have" ),
             "play: wrong suit played" => tr!("wrong suit played" ),
             "play: you must use trumps" => tr!("you must use trumps" ),
             "play: too weak trump played" => tr!("too weak trump played" ),
-            "play: you cannot play the suit of the called king in the first trick" => tr!("you cannot play the suit of the called king in the first trick" ),
             "play: no trick has been played yet" => tr!("no trick has been played yet" ),
             _ => error.to_string()
             };
@@ -414,12 +365,7 @@ impl Component for GamePage {
                 let clicked = card.clone();
                 html! {
                     <div class="card" style={style} 
-                    onclick=self.link.callback(move |_| 
-                        if player_action == Some(PlayerAction::MakeDog) {
-                            Msg::AddToDog(clicked)
-                        } else {
-                            Msg::Play(clicked)
-                        }) >
+                    onclick=self.link.callback(move |_| Msg::Play(clicked) ) >
                     </div>
                 }
             })
