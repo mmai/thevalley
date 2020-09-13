@@ -8,6 +8,8 @@ pub mod deal;
 pub mod points;
 pub mod pos;
 pub mod trick;
+pub mod being;
+pub mod star;
 
 pub const NB_PLAYERS:usize = 2;
 const DEAL_SIZE:usize = 10 ;
@@ -25,8 +27,8 @@ const DEAL_SIZE:usize = 10 ;
 pub fn deal_hands() -> ([cards::Hand; NB_PLAYERS], cards::Deck) {
     let mut hands = [cards::Hand::new(); NB_PLAYERS];
     let mut river = cards::Deck::new();
-    river.shuffle();
-
+    river.shuffle();    
+                        
     river.deal_each(&mut hands, 1);
     river.deal_each(&mut hands, 1);
     river.deal_each(&mut hands, 1);

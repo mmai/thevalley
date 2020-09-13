@@ -3,30 +3,48 @@ use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use thevalley_game::{NB_PLAYERS, cards, pos, deal, trick};
+use thevalley_game::{NB_PLAYERS, cards, pos, deal, trick, being, star};
 use webgame_protocol::{GameState, PlayerInfo, ProtocolErrorKind};
 use crate::{ ProtocolError };
 
-use crate::turn::Turn;
 use crate::deal::{Deal, DealSnapshot};
 use crate::player::{PlayerRole, GamePlayerState};
 
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+enum Phase {
+    Influence,
+    Act,
+    Source,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+enum Status {
+    Pregame,
+    Twilight,
+    Playing(pos::PlayerPos, Phase),
+    Endgame,
+}
+
 pub struct ValleyGameState {
-    players: BTreeMap<Uuid, GamePlayerState>,
-    turn: Turn,
-    deal: Deal,
-    first: pos::PlayerPos,
-    scores: Vec<[f32; NB_PLAYERS]>,
+    players: BTreeMap<Uuid, GamePlayerState>,     
+    status: Status,                               
+    stars: BTreeMap<Uuid, star::Star>,            
+    source : cards::Deck,                         
+    deathRiver: cards::Deck,                      
+// rules : CoreRules,                             
+//  beingsState : Map[Card, Being.State] = Map(), //reset each round
+//  lookedCards : Set[(Card, Suit)] = Set(),
+//  revealedCard : Set[(Card, Suit)] = Set()
 }
 
 impl Default for ValleyGameState {
     fn default() -> ValleyGameState {
         ValleyGameState {
             players: BTreeMap::new(),
-            turn: Turn::Pregame,
-            deal: Deal::new(pos::PlayerPos::P0),
-            first: pos::PlayerPos::P0,
-            scores: vec![],
+            status: Status::Pregame,
+            stars: BTreeMap::new(),
+            source: cards::Deck::default(),
+            deathRiver: cards::Deck::default(),
         }
     }
 }
@@ -36,7 +54,7 @@ impl GameState< GamePlayerState, GameStateSnapshot> for ValleyGameState {
     type PlayerRole = PlayerRole;
 
     fn is_joinable(&self) -> bool {
-        self.turn == Turn::Pregame
+        self.status == Status::Pregame
     }
     
     fn get_players(&self) -> &BTreeMap<Uuid, GamePlayerState> {
@@ -95,8 +113,7 @@ impl GameState< GamePlayerState, GameStateSnapshot> for ValleyGameState {
         }
         players.sort_by(|a, b| a.pos.to_n().cmp(&b.pos.to_n()));
         let pos = self.players[&player_id].pos;
-        let scores = [0.0; NB_PLAYERS];
-        let deal = match self.deal.deal_state() {
+        let stars = match self.stars.deal_state() {
             Some(state) => { // In Playing phase
                 let last_trick = if self.turn == Turn::Intertrick && !self.was_last_trick() {
                     // intertrick : there is at least a trick done
@@ -108,22 +125,20 @@ impl GameState< GamePlayerState, GameStateSnapshot> for ValleyGameState {
                 DealSnapshot {
                     hand: state.hands()[pos as usize],
                     current: state.next_player(),
-                    scores,
                     last_trick,
                 }
             },
             None => DealSnapshot { // In bidding phase
                 hand: self.deal.hands()[pos as usize],
                 current: self.deal.next_player(),
-                scores: [0.0;NB_PLAYERS],
                 last_trick: trick::Trick::default(),
             }
         };
         GameStateSnapshot {
             players,
-            scores: self.scores.clone(),
-            turn: self.turn,
-            deal
+            status: self.status,
+            river: self.river,
+            stars,
         }
     }
 
@@ -252,11 +267,12 @@ pub enum PlayEvent {
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct GameStateSnapshot {
-    pub players: Vec<GamePlayerState>,
-    pub turn: Turn,
-    pub deal: DealSnapshot,
-    pub scores: Vec<[f32; NB_PLAYERS]>,
+    pub players: Vec<GamePlayerState>,     
+    pub status: Status,                               
+    pub stars: Vec<star::StarSnapshot>,
+    pub deathRiver: cards::Deck,                      
 }
+
 
 impl webgame_protocol::GameStateSnapshot for GameStateSnapshot {
 

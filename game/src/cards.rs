@@ -10,7 +10,7 @@ use std::str::FromStr;
 use std::string::ToString;
 
 /// One of the four Suits: Heart, Spade, Diamond, Club.
-#[derive(PartialEq, Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Serialize, Deserialize, PartialOrd, Ord)]
 #[repr(u64)]
 pub enum Suit {
     /// The suit of hearts.
@@ -26,13 +26,13 @@ pub enum Suit {
     BlackJoker = 1 << 53,
 }
 
-impl Suit {
+impl Suit {                      
     /// Returns the suit corresponding to the number:
-    ///
-    /// * `0` -> Heart
-    /// * `1` -> Spade
-    /// * `2` -> Diamond
-    /// * `3` -> Club
+    ///                          
+    /// * `0` -> Heart           
+    /// * `1` -> Spade           
+    /// * `2` -> Diamond         
+    /// * `3` -> Club            
     /// * `4` -> Red Joker
     /// * `5` -> Black Joker
     ///
@@ -364,6 +364,7 @@ impl ToString for Hand {
 }
 
 /// A deck of cards.
+#[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
 pub struct Deck {
     cards: Vec<Card>,
 }

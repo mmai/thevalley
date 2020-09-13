@@ -8,9 +8,6 @@ use webgame_protocol::{PlayerInfo, PlayerState};
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[serde(rename_all = "snake_case")]
 pub enum PlayerRole {
-    Taker,
-    Partner,
-    Opponent,
     Unknown,
     PreDeal,
     Spectator,
