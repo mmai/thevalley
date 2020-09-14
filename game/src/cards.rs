@@ -389,6 +389,10 @@ impl Deck {
         d
     }
 
+    pub fn iter(&self) -> std::slice::Iter<Card>{
+        self.cards.iter()
+    }
+
     /// Shuffle this deck.
     pub fn shuffle(&mut self) {
         let mut rng = thread_rng();

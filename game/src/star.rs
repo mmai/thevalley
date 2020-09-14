@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::being::{Being, BeingSnapshot};
-use crate::cards::Hand;
+use crate::cards::{Card, Hand};
 use crate::pos::PlayerPos;
 
 /// A star
@@ -11,9 +11,18 @@ pub struct Star {
     hand: Hand,
     beings: Vec<Being>,
 }
+
+impl Star {
+    pub fn new(pos: PlayerPos, hand: Hand) -> Self {
+        Star {
+            pos,
+            majesty: 36,
+            hand,
+            beings: vec![],
+        }
+    }
+}
                                                   
-impl Star {                                       
-}                                                 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct StarSnapshot {
     pos: PlayerPos,
@@ -22,17 +31,25 @@ pub struct StarSnapshot {
     beings: Vec<BeingSnapshot>,
 }
                                                   
-                                                  
-                                                  
-                                                  
-                                                  
+impl Star {
 
+    pub fn add_to_hand(&mut self, card: Card){
+        self.hand.add(card);
+    }
 
+    pub fn pos(&self) -> PlayerPos {
+        self.pos
+    }
 
-                        
-                        
-                        
-                        
-                        
-                        
-                        
+    pub fn make_snapshot(&self, with_hand: bool, revealed: Vec<Card>) -> StarSnapshot{
+        let hand = if with_hand { Some(self.hand) } else { None };
+        let beings = self.beings.iter().map(|b| b.make_snapshot(&revealed)).collect();
+        StarSnapshot {
+            pos: self.pos,
+            majesty: self.majesty,
+            hand,
+            beings,
+        }
+    }
+}                                     
+                                                  

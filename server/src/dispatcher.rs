@@ -15,7 +15,7 @@ use crate::protocol::{
     SetPlayerRoleCommand, 
     PlayEvent,
     PlayCommand,
-    ValleyGameState,
+    ValleyGame,
     GamePlayerState,
     GameStateSnapshot
 };
@@ -24,7 +24,7 @@ use crate::protocol::{
 type DynFut<T> = ::std::pin::Pin<Box<dyn Send + ::std::future::Future<Output = T>>>;
 
 pub fn on_gameplay(
-    universe: Arc<Universe<ValleyGameState, GamePlayerState, GameStateSnapshot, PlayEvent>>,
+    universe: Arc<Universe<ValleyGame, GamePlayerState, GameStateSnapshot, PlayEvent>>,
     user_id: Uuid,
     cmd: GamePlayCommand,
 ) -> DynFut<Result<(), ProtocolError>> {
@@ -43,7 +43,7 @@ pub fn on_gameplay(
 }                                
 
 pub fn on_player_set_role(
-    universe: Arc<Universe<ValleyGameState, GamePlayerState, GameStateSnapshot, PlayEvent>>,
+    universe: Arc<Universe<ValleyGame, GamePlayerState, GameStateSnapshot, PlayEvent>>,
     user_id: Uuid,
     cmd: SetPlayerRoleCommand,
 ) -> DynFut<Result<(), ProtocolError>> {
@@ -73,7 +73,7 @@ pub fn on_player_set_role(
 }
 
 pub async fn on_player_play(
-    game: Arc<Game<ValleyGameState, GamePlayerState, GameStateSnapshot, PlayEvent>>,
+    game: Arc<Game<ValleyGame, GamePlayerState, GameStateSnapshot, PlayEvent>>,
     player_id: Uuid,
     cmd: PlayCommand,
 ) -> Result<(), ProtocolError> {

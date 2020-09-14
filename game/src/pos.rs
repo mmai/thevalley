@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 
 /// A position in the table
-#[derive(PartialEq,Clone,Copy,Debug,Serialize,Deserialize)]
+#[derive(PartialEq,Clone,Copy,Debug,Serialize,Deserialize, PartialOrd, Eq, Ord)]
 pub enum PlayerPos {
     /// Player 0
     P0,

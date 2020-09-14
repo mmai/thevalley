@@ -10,7 +10,29 @@ pub struct Being {
     loved_one: Option<Card>,
 }
 
+/// A being
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+pub struct BeingSnapshot {
+    pub face: Card,
+    pub resources: BTreeMap<Suit, Option<Card>>,
+    // pub loved_one: Option<Card>,
+}
+
 impl Being {
+    pub fn make_snapshot(&self, revealed: &Vec<Card>) -> BeingSnapshot {
+        let resources = self.resources.clone().into_iter().map(|(s, c)| {
+            if revealed.contains(&c) { 
+                (s, Some(c)) 
+            } else { 
+                (s, None) 
+            }
+        }).collect();
+        BeingSnapshot {
+            face: self.face,
+            resources,
+        }
+
+    }
 
   pub fn heart(&self) -> Option<Card> {
       self.get_resource(&Suit::Heart)
@@ -36,11 +58,3 @@ impl Being {
                                  
                                  
                                  
-/// A being
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
-pub struct BeingSnapshot {
-    pub face: Card,
-    pub resources: BTreeMap<Suit, Option<Card>>,
-    pub loved_one: Option<Card>,
-}
-
