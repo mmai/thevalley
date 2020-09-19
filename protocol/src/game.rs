@@ -11,14 +11,14 @@ use crate::deal::{Deal, DealSnapshot};
 use crate::player::{PlayerRole, GamePlayerState};
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
-enum Phase {
+pub enum Phase {
     Influence,
     Act,
     Source,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
-enum Status {
+pub enum Status {
     Pregame,
     Twilight(pos::PlayerPos, Vec<BTreeMap<pos::PlayerPos, cards::Card>>),
     Playing(pos::PlayerPos, Phase),
@@ -113,14 +113,14 @@ impl GameState< GamePlayerState, GameStateSnapshot> for ValleyGame {
             players.push(player_state.clone());
         }
         players.sort_by(|a, b| a.pos.to_n().cmp(&b.pos.to_n()));
-        let pos = self.players[&player_id].pos;
+        // let pos = self.players[&player_id].pos;
         let stars = self.stars.iter().map(|(uuid, star)|
-            star.make_snapshot(player_id == *uuid, self.revealed)
+            star.make_snapshot(player_id == *uuid, &self.revealed)
         ).collect();
         GameStateSnapshot {                                          
             players,                                                 
-            status: self.status,                                     
-            river: self.river,                                       
+            status: self.status.clone(),
+            river: self.river.clone(),
             stars,                                                   
         }                                                            
     }                                                                
@@ -159,17 +159,19 @@ impl GameState< GamePlayerState, GameStateSnapshot> for ValleyGame {
 impl ValleyGame {
     fn init_game(&mut self){
         let (hands, source) = thevalley_game::deal_hands();
-        self.players.into_iter()
-            .zip(hands.into_iter())
+        let stars: Vec<(Uuid, star::Star)>  = self.players.iter().zip(hands.into_iter())
             .map(|((uuid, player), hand)| {
-                // let last_card = source.draw();
-                // hand.add(last_card);
-                self.stars.insert(uuid, star::Star::new(player.pos, *hand));
-                // (player.pos, last_card)
+                (*uuid, star::Star::new(player.pos, *hand))
+            }).collect();
+
+        stars.into_iter().map(|(uuid, star)| {
+                self.stars.insert(uuid, star);
             });
+
         self.source = source;
         let (first, last_cards) = self.do_twilight();
-        self.status = Status::Twilight(first.unwrap("what are the odds ?"), last_cards);
+        // The 'unwrap_or' has no consequences : if 'first' is None (what are the odds ?), there are no cards left in the source, the game is thus already finished...
+        self.status = Status::Twilight(first.unwrap_or(pos::PlayerPos::P0), last_cards);
     }
 
     fn position_taken(&self, position: pos::PlayerPos) -> bool {
@@ -184,9 +186,24 @@ impl ValleyGame {
         match self.status {
             // let first = self.stars.iter()
             //     .map|(_, s)| s.) 
+            Status::Pregame => { },
             Status::Twilight(first, _) => {
                 self.status = Status::Playing(first, Phase::Influence);
+            },
+            Status::Playing(pos, Phase::Influence) => {
+                self.status = Status::Playing(pos, Phase::Act);
+            },
+            Status::Playing(pos, Phase::Act) => {
+                self.status = if self.source.is_empty() {
+                    Status::Endgame
+                } else {
+                    Status::Playing(pos, Phase::Source)
+                };
             }
+            Status::Playing(pos, Phase::Source) => {
+                self.status = Status::Playing(pos.next(), Phase::Influence);
+            }
+            Status::Endgame => { },
         }
     }
 
@@ -194,35 +211,26 @@ impl ValleyGame {
         let mut drawn_cards = vec![];
         let mut first: Option<pos::PlayerPos> = None; // First player to play
         while !first.is_some() && !self.source.is_empty() {
-            let last_cards: BTreeMap<pos::PlayerPos, cards::Card> = self.stars.into_iter()
-                .map(|(uuid, star)| {
-                    let last_card = self.source.draw();
+
+            let mut source_cards: Vec<cards::Card> = vec![];
+            for _ in 0..self.stars.len() {
+                source_cards.push(self.source.draw());
+            }
+
+            let last_cards: BTreeMap<pos::PlayerPos, cards::Card> = self.stars.iter_mut()
+                .zip(source_cards.into_iter())
+                .map(|((_, star), last_card)| {
                     star.add_to_hand(last_card);
                     (star.pos(), last_card)
                 }).collect();
-            first = last_cards.into_iter()
-                .max_by(|(_, a), (_, b)| strength(*a).cmp(&strength(*b)))
-                .map(|(pos, _)| pos);
+
+            first = last_cards.iter()
+                .max_by(|(_, a), (_, b)| strength(**a).cmp(&strength(**b)))
+                .map(|c| *c.0);
             drawn_cards.push(last_cards);
         }
 
         (first, drawn_cards)
-    }
-
-    pub fn set_play(&mut self, pid: Uuid, card: cards::Card) -> Result<(), ProtocolError> {
-        let pos = self.players.get(&pid).map(|p| p.pos).unwrap();
-        let state = self.deal.deal_state_mut().ok_or(
-            ProtocolError::new(ProtocolErrorKind::InternalError, "Unknown deal state")
-        )?;
-        match state.play_card(pos, card)? {
-            deal::TrickResult::Nothing => (),
-            deal::TrickResult::TrickOver(_winner, deal::DealResult::Nothing) => self.end_trick(),
-            deal::TrickResult::TrickOver(_winner, deal::DealResult::GameOver{points: _}) => {
-                self.end_last_trick();
-            }
-        }
-        self.update_turn();
-        Ok(())
     }
 
     fn end_trick(&mut self) {
@@ -242,21 +250,6 @@ impl ValleyGame {
         }
     }
 
-    fn end_deal(&mut self) {
-        self.turn = Turn::Interdeal;
-        for player in self.players.values_mut() {
-            if player.role != PlayerRole::Spectator {
-                player.ready = false;
-            }
-        }
-    }
-
-    fn next_deal(&mut self) {
-        self.first = self.first.next();
-        // let auction = bid::Auction::new(self.first);
-        // self.deal = Deal::Bidding(auction);
-    }
-                                                                     
 }                                                                    
                                                                      
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]           
@@ -279,9 +272,8 @@ impl webgame_protocol::GameStateSnapshot for GameStateSnapshot {
 
 impl GameStateSnapshot {
     pub fn get_playing_pos(&self) -> Option<pos::PlayerPos> {
-        match self.turn {
-            Turn::Playing(pos) => Some(pos),
-            // Turn::Bidding((_, pos)) => Some(pos),
+        match self.status {
+            Status::Playing(pos, _) => Some(pos),
             _ => None
         }
     }
@@ -310,17 +302,11 @@ impl GameStateSnapshot {
 
 impl Default for GameStateSnapshot {
     fn default() -> GameStateSnapshot {
-        let pos = pos::PlayerPos::P0; // could be anything
         GameStateSnapshot {
             players: vec![],
-            scores: vec![],
-            turn: Turn::Pregame,
-            deal: DealSnapshot {
-                hand: cards::Hand::new(),
-                current: pos,
-                scores: [0.0;NB_PLAYERS],
-                last_trick: trick::Trick::new(pos),
-            }
+            status: Status::Pregame,
+            stars: vec![],
+            river: cards::Deck::default()
         }
     }
 }

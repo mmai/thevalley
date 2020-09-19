@@ -79,12 +79,12 @@ pub async fn on_player_play(
 ) -> Result<(), ProtocolError> {
         let game_state = game.state_handle();
         let mut game_state = game_state.lock().await;
-        if let Err(e) = game_state.set_play(player_id, cmd.card) {
-            game.send(player_id, &Message::Error(e.into())).await;
-        } else {
-            game.broadcast(&Message::PlayEvent(PlayEvent::Play ( player_id, cmd.card )))
-            .await;
-            game.broadcast_state().await;
-        }
+        // if let Err(e) = game_state.set_play(player_id, cmd.card) {
+        //     game.send(player_id, &Message::Error(e.into())).await;
+        // } else {
+        //     game.broadcast(&Message::PlayEvent(PlayEvent::Play ( player_id, cmd.card )))
+        //     .await;
+        //     game.broadcast_state().await;
+        // }
         Ok(())
 }

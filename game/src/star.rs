@@ -41,9 +41,9 @@ impl Star {
         self.pos
     }
 
-    pub fn make_snapshot(&self, with_hand: bool, revealed: Vec<Card>) -> StarSnapshot{
+    pub fn make_snapshot(&self, with_hand: bool, revealed: &Vec<Card>) -> StarSnapshot{
         let hand = if with_hand { Some(self.hand) } else { None };
-        let beings = self.beings.iter().map(|b| b.make_snapshot(&revealed)).collect();
+        let beings = self.beings.iter().map(|b| b.make_snapshot(revealed)).collect();
         StarSnapshot {
             pos: self.pos,
             majesty: self.majesty,

@@ -1548,6 +1548,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "thevalley_client"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "console_error_panic_hook",
+ "i18n-embed",
+ "im-rc",
+ "js-sys",
+ "lazy_static",
+ "log",
+ "rust-embed",
+ "serde",
+ "stdweb",
+ "strum",
+ "thevalley_game",
+ "thevalley_protocol",
+ "tr",
+ "uuid 0.8.1",
+ "wasm-bindgen",
+ "web-sys",
+ "web_logger",
+ "webgame_protocol",
+ "yew",
+]
+
+[[package]]
 name = "thevalley_game"
 version = "0.1.0"
 dependencies = [
@@ -2106,32 +2132,6 @@ dependencies = [
  "uuid 0.8.1",
  "warp",
  "webgame_protocol",
-]
-
-[[package]]
-name = "webtarot_client"
-version = "0.4.0"
-dependencies = [
- "anyhow",
- "console_error_panic_hook",
- "i18n-embed",
- "im-rc",
- "js-sys",
- "lazy_static",
- "log",
- "rust-embed",
- "serde",
- "stdweb",
- "strum",
- "thevalley_game",
- "thevalley_protocol",
- "tr",
- "uuid 0.8.1",
- "wasm-bindgen",
- "web-sys",
- "web_logger",
- "webgame_protocol",
- "yew",
 ]
 
 [[package]]
