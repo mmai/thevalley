@@ -7,7 +7,7 @@ use crate::pos::PlayerPos;
 /// A star
 pub struct Star {
     pos: PlayerPos,
-    majesty: i32,
+    majesty: u8,
     hand: Hand,
     beings: Vec<Being>,
 }
@@ -21,13 +21,21 @@ impl Star {
             beings: vec![],
         }
     }
+
+    pub fn get_hand(&self) -> Hand {
+        self.hand
+    }
+
+    pub fn get_pos(&self) -> PlayerPos {
+        self.pos
+    }
 }
                                                   
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct StarSnapshot {
     pos: PlayerPos,
-    majesty: i32,
-    hand: Option<Hand>,
+    majesty: u8,
+    hand_count: u8,
     beings: Vec<BeingSnapshot>,
 }
                                                   
@@ -47,7 +55,7 @@ impl Star {
         StarSnapshot {
             pos: self.pos,
             majesty: self.majesty,
-            hand,
+            hand_count: hand.iter().len() as u8,
             beings,
         }
     }

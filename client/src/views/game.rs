@@ -19,8 +19,9 @@ use crate::protocol::{
     Command, GamePlayerState, GameStateSnapshot, Message, PlayerAction,
     GamePlayCommand,
     PlayCommand,
-    Turn,
     PlayEvent,
+    Status,
+    Phase,
 };
 use thevalley_game::cards;
 use crate::utils::format_join_code;
@@ -137,13 +138,13 @@ impl Component for GamePage {
                     self.sound_player.play("card".into());
                     let PlayEvent::Play(uuid, card) = evt;
                     self.add_chat_message(uuid, ChatLineData::Text(format!("play: {}", card.to_string())));
-                    log!("play event {:?}", evt);
+                    unsafe {log!("play event {:?}", evt)};
                 }
                 Message::Error(e) => {
                     self.is_waiting = false;
                     self.error = Some(e.message().into());
                     self.sound_player.play("error".into());
-                    log!("error from server {:?}", e);
+                    unsafe {log!("error from server {:?}", e)};
                 }
                 Message::PlayerConnected(state) => {
                     let player_id = state.player.id;
@@ -201,8 +202,6 @@ impl Component for GamePage {
         }
 
         let my_state = self.my_state();
-        let card_played = self.game_state.deal.last_trick.card_played(my_state.pos);
-        let player_action = my_state.get_turn_player_action(self.game_state.turn);
 
         // display players in order of playing starting from the current player
         let mut others_before = vec![];
@@ -236,62 +235,39 @@ impl Component for GamePage {
             actions_classes.push("current-player");
         }
 
-        let message_content: Option<Html> = match self.game_state.turn {
-               Turn::Intertrick => 
+        let message_content: Option<Html> = match self.game_state.status {
+               Status::Endgame => 
                    if !self.my_state().ready  { 
-                       let winner_pos = self.game_state.deal.last_trick.winner;
-                       let winner_name = self.game_state.pos_player_name(winner_pos);
-                       Some(html! { 
-                           <div class="results">
-                               { tr!("trick for ") }
-                               <strong>{ winner_name }</strong>
-                           </div>
-
-                       })
-                   } else { None },
-               Turn::Interdeal => 
-                   if !self.my_state().ready  { 
-                       let scores: Vec<Vec<f32>> = self.game_state.scores.iter().map(|score| score.to_vec()).collect();
                        let players: Vec<String> = self.game_state.players.iter().map(|pl| pl.player.nickname.clone()).collect();
-
-                       let taker_won = false;
-                       let diff_abs = 0;
-                       let contract_message = if taker_won {
-                           tr!("Contract succeded by {0} points", diff_abs)
-                       } else {
-                           tr!("Contract failed by {0} points", diff_abs)
-                       };
 
                        Some(html! {
                      <div>
-                        <Scores players=players scores=scores />
+                     {{ "Fini" }}
                      </div>
                    })} else { None },
               _ => None
         };
 
         let player = self.game_state.current_player_name();
-        let turn_info = match self.game_state.turn {
-            Turn::Pregame => tr!("pre-game"),
-            Turn::Intertrick => tr!("inter trick"),
-            Turn::Interdeal => tr!("inter deal"),
-            Turn::Playing(_) => tr!("{0} playing", player),
-            Turn::Endgame => tr!("end"),
+        let status_info = match self.game_state.status {
+            Status::Pregame => tr!("pre-game"),
+            Status::Twilight(_, _) => tr!("{0} starting", player),
+            Status::Playing(_, Phase::Influence) => tr!("{0} influence", player),
+            Status::Playing(_, Phase::Act) => tr!("{0} act", player),
+            Status::Playing(_, Phase::Source) => tr!("{0} source", player),
+            Status::Endgame => tr!("end"),
         };
 
         html! {
     <div class=game_classes>
       <header>
-        <p class="turn-info">{turn_info}</p>
+        <p class="turn-info">{status_info}</p>
       </header>
 
         { if let Some(error) = &self.error  { 
             let error_str = match error.as_str() {
             "play: invalid turn order" => tr!("invalid turn order"),
             "play: you can only play cards you have" => tr!("you can only play cards you have" ),
-            "play: wrong suit played" => tr!("wrong suit played" ),
-            "play: you must use trumps" => tr!("you must use trumps" ),
-            "play: too weak trump played" => tr!("too weak trump played" ),
             "play: no trick has been played yet" => tr!("no trick has been played yet" ),
             _ => error.to_string()
             };
@@ -321,8 +297,8 @@ impl Component for GamePage {
         }} else { html! {} }}
 
         <section class=actions_classes>
-            {match self.game_state.turn {
-               Turn::Pregame => html! {
+            {match self.game_state.status {
+               Status::Pregame => html! {
                 <div class="wrapper">
                     <div class="toolbar">
                     {if !self.my_state().ready  {
@@ -338,15 +314,15 @@ impl Component for GamePage {
                 _ => 
                     html! {
                         <div>
-                            <div>River</div>
-                            <div>my beings</div>
+                            <div>{{ "River" }}</div>
+                            <div>{{ "my beings" }}</div>
                         </div>
                     }
              }}
         </section>
 
         <section class="hand">
-        { if self.game_state.turn != Turn::Pregame && self.game_state.turn != Turn::Interdeal {
+        { if self.game_state.status != Status::Pregame {
             html! {
               for self.hand.list().iter().map(|card| {
                 let style =format!("--bg-image: url('cards/{}-{}.svg')", &card.rank().to_string(), &card.suit().to_safe_string());

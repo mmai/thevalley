@@ -112,15 +112,22 @@ impl GameState< GamePlayerState, GameStateSnapshot> for ValleyGame {
             players.push(player_state.clone());
         }
         players.sort_by(|a, b| a.pos.to_n().cmp(&b.pos.to_n()));
-        // let pos = self.players[&player_id].pos;
-        let stars = self.stars.iter().map(|(uuid, star)|
+        let pos = self.players[&player_id].pos;
+        let mut hand: cards::Hand = cards::Hand::default();
+        let stars = self.stars.iter().map(|(uuid, star)| {
+            if player_id == *uuid {
+                hand = star.get_hand();
+            }
             star.make_snapshot(player_id == *uuid, &self.revealed)
+        }
         ).collect();
         GameStateSnapshot {                                          
             players,                                                 
+            stars,                                                   
+            hand,
+            pos,
             status: self.status.clone(),
             river: self.river.clone(),
-            stars,                                                   
         }                                                            
     }                                                                
 
@@ -259,6 +266,8 @@ pub enum PlayEvent {
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct GameStateSnapshot {
     pub players: Vec<GamePlayerState>,     
+    pub hand: cards::Hand,
+    pub pos: pos::PlayerPos,
     pub status: Status,                               
     pub stars: Vec<star::StarSnapshot>,
     pub river: cards::Deck,                      
@@ -303,6 +312,8 @@ impl Default for GameStateSnapshot {
     fn default() -> GameStateSnapshot {
         GameStateSnapshot {
             players: vec![],
+            hand: cards::Hand::default(),
+            pos: pos::PlayerPos::P0,
             status: Status::Pregame,
             stars: vec![],
             river: cards::Deck::default()
