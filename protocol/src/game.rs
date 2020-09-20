@@ -7,7 +7,6 @@ use thevalley_game::{NB_PLAYERS, cards, pos, deal, trick, being, star, strength}
 use webgame_protocol::{GameState, PlayerInfo, ProtocolErrorKind};
 use crate::{ ProtocolError };
 
-use crate::deal::{Deal, DealSnapshot};
 use crate::player::{PlayerRole, GamePlayerState};
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]

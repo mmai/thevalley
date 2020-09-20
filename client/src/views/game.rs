@@ -13,7 +13,6 @@ use tr::tr;
 
 use crate::api::Api;
 use crate::components::chat_box::{ChatBox, ChatLine, ChatLineData};
-use crate::components::player_list::PlayerList;
 use crate::components::scores::Scores;
 use crate::gprotocol::{GameInfo, PlayerInfo, SendTextCommand};
 use crate::protocol::{
@@ -160,7 +159,7 @@ impl Component for GamePage {
                 Message::GameStateSnapshot(snapshot) => {
                     self.is_waiting = false;
                     self.game_state = Rc::new(snapshot);
-                    self.hand = self.game_state.deal.hand;
+                    self.hand = self.game_state.hand;
                 }
                 _ => {}
             },
@@ -286,8 +285,6 @@ impl Component for GamePage {
         <p class="turn-info">{turn_info}</p>
       </header>
 
-      <PlayerList game_state=self.game_state.clone() players=others/>
-
         { if let Some(error) = &self.error  { 
             let error_str = match error.as_str() {
             "play: invalid turn order" => tr!("invalid turn order"),
@@ -341,17 +338,8 @@ impl Component for GamePage {
                 _ => 
                     html! {
                         <div>
-                            {if let Some(card) = card_played {
-                                let style =format!("--bg-image: url('cards/{}-{}.svg')", &card.rank().to_string(), &card.suit().to_safe_string());
-                                html! {
-                                    <div class="card" style={style}></div>
-                                }
-                            } else if player_action == Some(PlayerAction::Play) {
-                                html!{
-                                    <div class="yourturn"> {{ tr!("Your turn to play!") }} </div>
-                            }} else {
-                                html!{}
-                            }}
+                            <div>River</div>
+                            <div>my beings</div>
                         </div>
                     }
              }}

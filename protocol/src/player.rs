@@ -1,7 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-use crate::turn::Turn;
-
 use thevalley_game::pos;
 use webgame_protocol::{PlayerInfo, PlayerState};
 
@@ -33,11 +31,5 @@ impl PlayerState for GamePlayerState {
 }
 
 impl GamePlayerState {
-    pub fn get_turn_player_action(&self, turn: Turn) -> Option<PlayerAction> {
-        match turn {
-            Turn::Playing(pos) if pos == self.pos => Some(PlayerAction::Play),
-            _ => None
-        }
-    }
 }
 
