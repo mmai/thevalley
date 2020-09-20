@@ -170,7 +170,7 @@ impl ValleyGame {
                 (*uuid, star::Star::new(player.pos, *hand))
             }).collect();
 
-        stars.into_iter().map(|(uuid, star)| {
+        stars.into_iter().for_each(|(uuid, star)| {
                 self.stars.insert(uuid, star);
             });
 
