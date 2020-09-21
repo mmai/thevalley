@@ -84,6 +84,15 @@ impl GamePage {
             .find(|state| state.player.id == self.player_info.id)
             .unwrap()
     }
+
+    // XXX works only for two players game.
+    pub fn opponent_state(&self) -> &GamePlayerState {
+        self.game_state
+            .players
+            .iter()
+            .find(|state| state.player.id != self.player_info.id)
+            .unwrap()
+    }
 }
 
 impl Component for GamePage {
@@ -297,7 +306,7 @@ impl Component for GamePage {
         }} else { html! {} }}
 
         <section class=actions_classes>
-            {match self.game_state.status {
+            {match &self.game_state.status {
                Status::Pregame => html! {
                 <div class="wrapper">
                     <div class="toolbar">
@@ -311,9 +320,48 @@ impl Component for GamePage {
                     <h1>{{ tr!("join code:") }} <strong>{format!(" {}", format_join_code(&self.game_info.join_code))}</strong></h1>
                  </div>
                 },
+               Status::Twilight(first, cards) => {
+                   let opponent_state = self.opponent_state();
+                   let my_cards: Vec<&cards::Card> = cards.iter().map(|draw| draw.get(&my_state.pos).unwrap()).collect();
+                   let opponent_cards: Vec<&cards::Card> = cards.iter().map(|draw| draw.get(&opponent_state.pos).unwrap()).collect();
+                   let first_name = if (first == &my_state.pos) { 
+                       String::from("you")
+                   } else {
+                       opponent_state.player.nickname.clone()
+                   };
+               html! {
+                   <div id="twilight-cards">
+                       <div class="hand">
+                         { for opponent_cards.iter().map(|card| {
+                               let style =format!("--bg-image: url('cards/{}-{}.svg')", &card.rank().to_string(), &card.suit().to_safe_string());
+                               html! { <div class="card" style={style}></div> }
+                           })
+                         }
+                       </div>
+                       <div class="hand">
+                        { for my_cards.iter().map(|card| {
+                               let style =format!("--bg-image: url('cards/{}-{}.svg')", &card.rank().to_string(), &card.suit().to_safe_string());
+                               html! { <div class="card" style={style}></div> }
+                           })
+                        }
+                     </div>
+
+                     <div class="notify-wrapper">
+                         <div class="notify wrapper">
+                             {format!(" {} will start", first_name)}
+                             <div class="toolbar">
+                                 <button class="primary" onclick=self.link.callback(|_| Msg::Continue)>{"Ok"}</button>
+                             </div>
+                         </div>
+                     </div>
+
+
+                 </div>
+               }},
                 _ => 
                     html! {
                         <div>
+                            <div>{{ "Source" }}{format!(" {}", &self.game_state.source_count)}</div>
                             <div>{{ "River" }}</div>
                             <div>{{ "my beings" }}</div>
                         </div>
@@ -323,8 +371,12 @@ impl Component for GamePage {
 
         <section class="hand">
         { if self.game_state.status != Status::Pregame {
-            html! {
-              for self.hand.list().iter().map(|card| {
+           let hidden_cards: Vec<&cards::Card> = 
+               if let Status::Twilight(first, cards) = &self.game_state.status {
+                   cards.iter().map(|draw| draw.get(&my_state.pos).unwrap()).collect()
+               } else { vec![] };
+           html! {
+              for self.hand.list().iter().filter(|card| !hidden_cards.contains(card)).map(|card| {
                 let style =format!("--bg-image: url('cards/{}-{}.svg')", &card.rank().to_string(), &card.suit().to_safe_string());
                 let clicked = card.clone();
                 html! {

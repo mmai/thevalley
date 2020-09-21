@@ -128,6 +128,7 @@ impl GameState< GamePlayerState, GameStateSnapshot> for ValleyGame {
             pos,
             status: self.status.clone(),
             river: self.river.clone(),
+            source_count: self.source.len() as u8,
         }                                                            
     }                                                                
 
@@ -270,6 +271,7 @@ pub struct GameStateSnapshot {
     pub pos: pos::PlayerPos,
     pub status: Status,                               
     pub stars: Vec<star::StarSnapshot>,
+    pub source_count: u8,
     pub river: cards::Deck,                      
 }
 
@@ -320,6 +322,7 @@ impl Default for GameStateSnapshot {
             pos: pos::PlayerPos::P0,
             status: Status::Pregame,
             stars: vec![],
+            source_count: 34,
             river: cards::Deck::default()
         }
     }
