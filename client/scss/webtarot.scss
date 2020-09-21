@@ -337,6 +337,10 @@ section.hand {
   transform: scale(1.3);
 }
 
+section.bottom {
+  grid-row-end: end;
+}
+
 .chat {
   grid-row-start: players;
   grid-row-end: bottom;

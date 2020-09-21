@@ -227,7 +227,7 @@ impl ValleyGame {
                 .zip(source_cards.into_iter())
                 .map(|((_, star), last_card)| {
                     star.add_to_hand(last_card);
-                    (star.pos(), last_card)
+                    (star.get_pos(), last_card)
                 }).collect();
 
             first = last_cards.iter()
@@ -304,6 +304,10 @@ impl GameStateSnapshot {
         } else {
             "".into()
         }
+    }
+
+    pub fn star(&self) -> &star::StarSnapshot {
+        self.stars.iter().find(|s| s.get_pos() == self.pos).unwrap()
     }
 
 }

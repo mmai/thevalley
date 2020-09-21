@@ -338,6 +338,15 @@ impl Component for GamePage {
         }}
         </section>
 
+        <section class="bottom">
+        { if self.game_state.status != Status::Pregame {
+           html! {
+            {{ self.game_state.star().get_majesty() }}
+        }} else {
+            html!{}
+        }}
+        </section>
+
         <ChatBox log=self.chat_log.clone()
                  on_send_chat=self.link.callback(|text| Msg::SetChatLine(text))
         />

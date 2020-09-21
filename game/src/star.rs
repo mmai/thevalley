@@ -29,24 +29,9 @@ impl Star {
     pub fn get_pos(&self) -> PlayerPos {
         self.pos
     }
-}
-                                                  
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
-pub struct StarSnapshot {
-    pos: PlayerPos,
-    majesty: u8,
-    hand_count: u8,
-    beings: Vec<BeingSnapshot>,
-}
-                                                  
-impl Star {
 
     pub fn add_to_hand(&mut self, card: Card){
         self.hand.add(card);
-    }
-
-    pub fn pos(&self) -> PlayerPos {
-        self.pos
     }
 
     pub fn make_snapshot(&self, with_hand: bool, revealed: &Vec<Card>) -> StarSnapshot{
@@ -59,5 +44,29 @@ impl Star {
             beings,
         }
     }
+}
+                                                  
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+pub struct StarSnapshot {
+    pos: PlayerPos,
+    majesty: u8,
+    hand_count: u8,
+    beings: Vec<BeingSnapshot>,
+}
+                                                  
+impl StarSnapshot {
+
+    pub fn get_pos(&self) -> PlayerPos {
+        self.pos
+    }
+
+    pub fn get_majesty(&self) -> u8 {
+        self.majesty
+    }
+
+    pub fn get_beings(&self) -> &Vec<BeingSnapshot> {
+        &self.beings
+    }
+
 }                                     
                                                   
