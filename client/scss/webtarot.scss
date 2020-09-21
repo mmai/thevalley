@@ -2,6 +2,7 @@
 @import url("https://fonts.googleapis.com/css?family=Courier+Prime:400,700&display=swap");
 
 $card_width: 15vh;
+$card_height: 22vh;
 $gamepadding: 1em;
 
 html {
@@ -325,9 +326,9 @@ section.hand {
 
 .card{
   width: $card_width;
-  height: 28vh;
+  height: $card_height;
   background-image: var(--bg-image);
-  background-size: $card_width 28vh;
+  background-size: $card_width $card_height;
   cursor: pointer;
   box-shadow: 5px 6px 15px -5px rgba(0, 0, 0, 0.75);
 }
