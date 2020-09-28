@@ -1,17 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::message::ProtocolError;
-use webgame_protocol::ProtocolErrorKind;
-use thevalley_game::{cards, deal};
-
-impl From<deal::PlayError> for ProtocolError {
-    fn from(error: deal::PlayError) -> Self {
-        ProtocolError::new(
-            ProtocolErrorKind::BadState,
-            format!("play: {}", error)
-       )
-    }
-}
+use thevalley_game::cards;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "cmd", rename_all = "snake_case")]

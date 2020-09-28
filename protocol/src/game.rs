@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use thevalley_game::{NB_PLAYERS, cards, pos, deal, trick, being, star, strength};
+use thevalley_game::{NB_PLAYERS, cards, pos, trick, being, star, strength};
 use webgame_protocol::{GameState, PlayerInfo, ProtocolErrorKind};
 use crate::{ ProtocolError };
 
@@ -135,9 +135,7 @@ impl GameState< GamePlayerState, GameStateSnapshot> for ValleyGame {
     fn set_player_ready(&mut self, player_id: Uuid){
         if let Some(player_state) = self.players.get_mut(&player_id) {
             player_state.ready = true;
-            if self.status != Status::Pregame {
-                self.next();
-            } else {
+            if self.status == Status::Pregame {
                 player_state.role = PlayerRole::PreDeal;
 
                 // Check if we start the game
@@ -177,8 +175,10 @@ impl ValleyGame {
 
         self.source = source;
         let (first, last_cards) = self.do_twilight();
-        // The 'unwrap_or' has no consequences : if 'first' is None (what are the odds ?), there are no cards left in the source, the game is thus already finished...
-        self.status = Status::Twilight(first.unwrap_or(pos::PlayerPos::P0), last_cards);
+        self.status = match first {
+            Some(pos_first) => Status::Twilight(pos_first, last_cards),
+            None => Status::Endgame
+        };
     }
 
     fn position_taken(&self, position: pos::PlayerPos) -> bool {

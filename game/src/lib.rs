@@ -4,7 +4,6 @@
 extern crate test;
 
 pub mod cards;
-pub mod deal;
 pub mod points;
 pub mod pos;
 pub mod trick;
