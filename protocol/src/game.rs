@@ -132,7 +132,7 @@ impl GameState< GamePlayerState, GameStateSnapshot> for ValleyGame {
         }                                                            
     }                                                                
 
-    fn set_player_ready(&mut self, player_id: Uuid){
+    fn set_player_ready(&mut self, player_id: Uuid) -> bool {
         if let Some(player_state) = self.players.get_mut(&player_id) {
             player_state.ready = true;
             if self.status == Status::Pregame {
@@ -147,10 +147,16 @@ impl GameState< GamePlayerState, GameStateSnapshot> for ValleyGame {
                 }
                 if count == NB_PLAYERS {
                     self.init_game();
+                    return true;
                 }           
-                            
             }               
         }                   
+        false
+    }
+
+    fn update_init_state(&mut self) -> bool {
+        self.next();
+        false
     }
 
     fn set_player_not_ready(&mut self, player_id: Uuid) {
