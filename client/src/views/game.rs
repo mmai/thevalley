@@ -41,9 +41,11 @@ pub struct GamePage {
     game_info: GameInfo,
     player_info: PlayerInfo,
     game_state: Rc<GameStateSnapshot>,
+    next_states: Vector<GameStateSnapshot>,
     chat_log: Vector<Rc<ChatLine>>,
     hand: cards::Hand,
     is_waiting: bool,
+    update_needs_confirm: bool,
     sound_player: SoundPlayer,
     error: Option<String>,
 }
@@ -85,6 +87,14 @@ impl GamePage {
             .unwrap()
     }
 
+    fn apply_snapshot(&mut self, snapshot: GameStateSnapshot){
+        self.game_state = Rc::new(snapshot);
+        self.update_needs_confirm = match &self.game_state.status {
+            Status::Twilight(_, _) => true,
+            _ => false
+        }
+    }
+
     // XXX works only for two players game.
     pub fn opponent_state(&self) -> &GamePlayerState {
         self.game_state
@@ -124,9 +134,11 @@ impl Component for GamePage {
                 data: ChatLineData::Connected,
             })),
             game_state: Rc::new(GameStateSnapshot::default()),
+            next_states: Vector::new(),
             player_info: props.player_info,
             hand: cards::Hand::new(),
             is_waiting: false,
+            update_needs_confirm: false,
             sound_player: SoundPlayer::new(sound_paths),
             error: None,
         }
@@ -168,7 +180,12 @@ impl Component for GamePage {
                 }
                 Message::GameStateSnapshot(snapshot) => {
                     self.is_waiting = false;
-                    self.game_state = Rc::new(snapshot);
+                    if self.update_needs_confirm {
+                        self.next_states.push_front(snapshot);
+                    } else {
+                        //Update state with snapshot
+                        self.apply_snapshot(snapshot);
+                    }
                     self.hand = self.game_state.hand;
                 }
                 _ => {}
@@ -184,8 +201,14 @@ impl Component for GamePage {
                 self.error = None;
             }
             Msg::Continue => {
-                self.is_waiting = true;
-                self.api.send(Command::Continue);
+                if let Some(snapshot) =  self.next_states.pop_back() {
+                    self.apply_snapshot(snapshot);
+                } else {
+                    //No snapshot to apply, we simply allow the direct update for the next one
+                    self.update_needs_confirm = false;
+                }
+                // self.is_waiting = true;
+                // self.api.send(Command::Continue);
             }
             Msg::MarkReady => {
                 self.is_waiting = true;
