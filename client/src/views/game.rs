@@ -320,7 +320,6 @@ impl Component for GamePage {
           <div class="notify-wrapper">
             <div class="notify wrapper">
                 { message }
-
                 <div class="toolbar">
                     <button class="primary" onclick=self.link.callback(|_| Msg::Continue)>{"Ok"}</button>
                 </div>
@@ -352,35 +351,33 @@ impl Component for GamePage {
                    } else {
                        opponent_state.player.nickname.clone()
                    };
-               html! {
-                   <div id="twilight-cards">
-                       <div class="hand">
-                         { for opponent_cards.iter().map(|card| {
-                               let style =format!("--bg-image: url('cards/{}-{}.svg')", &card.rank().to_string(), &card.suit().to_safe_string());
-                               html! { <div class="card" style={style}></div> }
-                           })
-                         }
-                       </div>
-                       <div class="hand">
-                        { for my_cards.iter().map(|card| {
-                               let style =format!("--bg-image: url('cards/{}-{}.svg')", &card.rank().to_string(), &card.suit().to_safe_string());
-                               html! { <div class="card" style={style}></div> }
-                           })
-                        }
-                     </div>
+                   html! {
+                       <div id="twilight-cards">
+                           <div class="hand">
+                             { for opponent_cards.iter().map(|card| {
+                                   let style =format!("--bg-image: url('cards/{}-{}.svg')", &card.rank().to_string(), &card.suit().to_safe_string());
+                                   html! { <div class="card" style={style}></div> }
+                               })
+                             }
+                           </div>
+                           <div class="hand">
+                            { for my_cards.iter().map(|card| {
+                                   let style =format!("--bg-image: url('cards/{}-{}.svg')", &card.rank().to_string(), &card.suit().to_safe_string());
+                                   html! { <div class="card" style={style}></div> }
+                               })
+                            }
+                         </div>
 
-                     <div class="notify-wrapper">
-                         <div class="notify wrapper">
+                         <div>
                              {format!(" {} will start", first_name)}
                              <div class="toolbar">
                                  <button class="primary" onclick=self.link.callback(|_| Msg::Continue)>{"Ok"}</button>
                              </div>
                          </div>
+
+
                      </div>
-
-
-                 </div>
-               }},
+                   }},
                 _ => 
                     html! {
                         <div>
@@ -421,10 +418,6 @@ impl Component for GamePage {
             html!{}
         }}
         </section>
-
-        <ChatBox log=self.chat_log.clone()
-                 on_send_chat=self.link.callback(|text| Msg::SetChatLine(text))
-        />
 
     </div>
 

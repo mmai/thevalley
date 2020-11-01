@@ -224,7 +224,6 @@ impl ValleyGame {
         let mut drawn_cards = vec![];
         let mut first: Option<pos::PlayerPos> = None; // First player to play
         while !first.is_some() && !self.source.is_empty() {
-
             let mut source_cards: Vec<cards::Card> = vec![];
             for _ in 0..self.stars.len() {
                 source_cards.push(self.source.draw());
@@ -237,9 +236,21 @@ impl ValleyGame {
                     (star.get_pos(), last_card)
                 }).collect();
 
-            first = last_cards.iter()
-                .max_by(|(_, a), (_, b)| strength(**a).cmp(&strength(**b)))
-                .map(|c| *c.0);
+           let max_card = last_cards.iter()
+                .max_by(|(_, a), (_, b)| strength(**a).cmp(&strength(**b)));
+
+            first = if let Some((_, card)) = max_card {
+                //Check there is no ex-aequo
+                if last_cards.iter().any(|(_, a)| strength(*a).eq(&strength(*card))) {
+                    None
+                } else {
+                    max_card.map(|c| *c.0)
+                }
+            } else {
+                None
+            };
+
+
             drawn_cards.push(last_cards);
         }
 

@@ -1,5 +1,3 @@
 # TODO 
 
-* démarrage partie : distribution
-* types de données
-* images 54 cartes
+* bug twilight première carte identique : une seule tirée
