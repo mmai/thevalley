@@ -5,7 +5,7 @@ use uuid::Uuid;
 
 use thevalley_game::{NB_PLAYERS, cards, pos, trick, being, star, strength};
 use webgame_protocol::{GameState, PlayerInfo, ProtocolErrorKind};
-use crate::{ ProtocolError };
+use crate::{ ProtocolError, DebugOperation, ValleyVariant };
 
 use crate::player::{PlayerRole, GamePlayerState};
 
@@ -24,7 +24,9 @@ pub enum Status {
     Endgame,
 }
 
+#[derive(Clone, Serialize, Deserialize)]
 pub struct ValleyGame {
+    nb_players: u8,
     players: BTreeMap<Uuid, GamePlayerState>,     
     status: Status,                               
     stars: BTreeMap<Uuid, star::Star>,            
@@ -39,6 +41,7 @@ pub struct ValleyGame {
 impl Default for ValleyGame {
     fn default() -> ValleyGame {
         ValleyGame {
+            nb_players: 2,
             players: BTreeMap::new(),
             status: Status::Pregame,
             stars: BTreeMap::new(),
@@ -49,10 +52,22 @@ impl Default for ValleyGame {
     }
 }
 
-impl GameState< GamePlayerState, GameStateSnapshot> for ValleyGame {
+impl GameState for ValleyGame {
     type PlayerPos = pos::PlayerPos;
     type PlayerRole = PlayerRole;
 
+    type GamePlayerState = GamePlayerState;
+    type Snapshot = GameStateSnapshot;
+
+    type Operation = DebugOperation;
+    type VariantParameters = VariantSettings;
+
+    fn set_variant(&mut self, variant: ValleyVariant) {
+        // self.nb_players = variant.parameters.nb_players;
+        // self.deal = Deal::new(pos::PlayerPos::from_n(0, self.nb_players));
+        // self.first = pos::PlayerPos::from_n(0, self.nb_players);
+    }
+    
     fn is_joinable(&self) -> bool {
         self.status == Status::Pregame
     }
@@ -68,14 +83,12 @@ impl GameState< GamePlayerState, GameStateSnapshot> for ValleyGame {
 
         //Default pos
         let nb_players = self.players.len();
-        let mut newpos = pos::PlayerPos::from_n(nb_players);
+        let mut newpos = pos::PlayerPos::from_n(nb_players, self.nb_players);
 
-        //TODO rendre générique
-        for p in &[ pos::PlayerPos::P0,
-        pos::PlayerPos::P1,
-        ] {
-            if !self.position_taken(*p){
-                newpos = p.clone();
+        for p in 0..self.nb_players {
+            let position = pos::PlayerPos::from_n(p as usize, self.nb_players);
+            if !self.position_taken(position){
+                newpos = position.clone();
                 break;
             }
         }
@@ -93,6 +106,10 @@ impl GameState< GamePlayerState, GameStateSnapshot> for ValleyGame {
 
     fn remove_player(&mut self, player_id: Uuid) -> bool {
         self.players.remove(&player_id).is_some()
+    }
+
+    fn get_player_role(&self, player_id: Uuid) -> Option<PlayerRole>{
+        self.players.get(&player_id).map(|p| p.role)
     }
 
     fn set_player_role(&mut self, player_id: Uuid, role: PlayerRole) {
@@ -145,7 +162,7 @@ impl GameState< GamePlayerState, GameStateSnapshot> for ValleyGame {
                         count = count + 1;
                     }
                 }
-                if count == NB_PLAYERS {
+                if count == self.nb_players {
                     self.init_game();
                     return true;
                 }           
@@ -165,6 +182,18 @@ impl GameState< GamePlayerState, GameStateSnapshot> for ValleyGame {
         }
     }
 
+    fn manage_operation(&mut self, operation: Self::Operation) {
+        match operation {
+            Self::Operation::SetSeed(seed) => {
+                //TODO
+                // let (hands, river) = tarotgame::deal_seeded_hands(seed, self.nb_players as usize);
+            },
+            Self::Operation::ShowState => {
+                println!("Debug state : {}", serde_json::to_string(self).unwrap());
+            }
+        }
+        
+    }
 }
 
 impl ValleyGame {
@@ -275,6 +304,11 @@ impl ValleyGame {
     }
 
 }                                                                    
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct VariantSettings {
+    pub nb_players: u8,
+}
                                                                      
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]           
 pub enum PlayEvent {                                                 
@@ -336,7 +370,7 @@ impl Default for GameStateSnapshot {
         GameStateSnapshot {
             players: vec![],
             hand: cards::Hand::default(),
-            pos: pos::PlayerPos::P0,
+            pos: pos::PlayerPos { pos: pos::AbsolutePos::P0, count: 2},
             status: Status::Pregame,
             stars: vec![],
             source_count: 34,

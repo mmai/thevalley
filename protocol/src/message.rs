@@ -1,9 +1,9 @@
 use serde::{Deserialize, Serialize};
 
-use webgame_protocol::{ProtocolError as GenericProtocolError, ProtocolErrorKind, Message as GenericMessage, Command as GenericCommand};
+use webgame_protocol::{ProtocolError as GenericProtocolError, ProtocolErrorKind, Message as GenericMessage, Command as GenericCommand, Variant};
 
 use crate::player::{PlayerRole, GamePlayerState};
-use crate::game::{GameStateSnapshot, PlayEvent};
+use crate::game::{GameStateSnapshot, PlayEvent, VariantSettings};
 use crate::game_messages::GamePlayCommand;
 
 
@@ -44,5 +44,14 @@ pub struct SetPlayerRoleCommand {
     pub role: PlayerRole,
 }
 
-pub type Message = GenericMessage<GamePlayerState, GameStateSnapshot, PlayEvent>;
-pub type Command = GenericCommand<GamePlayCommand, SetPlayerRoleCommand, GameStateSnapshot>;
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub enum DebugOperation {
+    SetSeed([u8; 32]),
+    ShowState,
+}
+
+impl webgame_protocol::DebugOperation for DebugOperation { }
+
+pub type Message = GenericMessage<GamePlayerState, GameStateSnapshot, DebugOperation, PlayEvent>;
+pub type ValleyVariant = Variant<VariantSettings>;
+pub type Command = GenericCommand<GamePlayCommand, SetPlayerRoleCommand, GameStateSnapshot, DebugOperation, ValleyVariant>;

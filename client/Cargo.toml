@@ -1,29 +1,32 @@
 [package]
 name = "thevalley_client"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Henri Bourcereau <henri@bourcereau.fr>"]
 edition = "2018"
 
-[package.metadata.wasm-pack.profile.dev.wasm-bindgen]
-dwarf-debug-info = true
+# [package.metadata.wasm-pack.profile.dev.wasm-bindgen]
+# dwarf-debug-info = true
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-yew = "0.17.2"
+yew = "0.17"
 webgame_protocol = { path = "../../webgame/webgame_protocol" }
 # webgame_protocol = { git = "https://github.com/mmai/webgame"}
 thevalley_protocol = { path = "../protocol" }
 thevalley_game = { path = "../game" }
-wasm-bindgen = "0.2.59"
-web_logger = "0.2.0"
+wasm-bindgen = "0.2.63"
+
+weblog = "0.3.0"
+
 log = "0.4.8"
+wee_alloc = { version = "0.4.5", optional = true }
 console_error_panic_hook = "0.1.6"
 anyhow = "1.0.27"
 uuid = "0.8.1"
 serde = { version = "1.0.105", features = ["derive"] }
-web-sys = { version = "0.3.36", features = [
+web-sys = { version = "0.3.4", features = [
   "Window",
   "Location",
   "HtmlDivElement",
@@ -31,10 +34,11 @@ web-sys = { version = "0.3.36", features = [
   "console"
   ] }                                 
 im-rc = "14.3.0"                      
-stdweb = "0.4.20"                     
-strum = "0.18.0"                      
+strum = "0.19.0"                      
 tr = { version = "0.1", default-features = false, features = ["gettext"] }
-rust-embed = { version = "5.5.1", features = ["debug-embed"] }
+rust-embed = { version = "5.9.0", features = ["debug-embed"] }
 i18n-embed = { version = "0.6", features = ["web-sys-requester"] }
 js-sys = "0.3.40"
 lazy_static = "1.4.0"
+url = "2.2.0"
+chrono = "0.4.19"

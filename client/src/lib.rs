@@ -1,12 +1,5 @@
 #![recursion_limit = "2048"]
 
-#[macro_use]
-macro_rules! log {
-    ( $( $t:tt )* ) => {
-        web_sys::console::log_1(&format!( $( $t )* ).into());
-    }
-}
-
 mod api;
 mod components;
 mod utils;
@@ -23,6 +16,8 @@ use yew::services::IntervalService;
 use yew::services::interval::IntervalTask;
 use yew::services::storage::{Area, StorageService};
 use yew::format::Json;
+
+use weblog::*;
 
 use crate::api::Api;
 use crate::protocol::{Message, Command};
@@ -102,7 +97,7 @@ impl Component for App {
 
         let player_info: Option<PlayerInfo> = {
             if let Json(Ok(restored_info)) =  storage.restore(KEY) {
-                log!("player info: {:?}", restored_info);
+                console_log!(format!("player info: {:?}", restored_info));
                 Some(restored_info)
             } else {
                 None 
@@ -111,7 +106,7 @@ impl Component for App {
 
         let game_info: Option<GameInfo> = {
             if let Json(Ok(restored_info)) =  storage.restore(KEY_GAME) {
-                log!("game info: {:?}", restored_info);
+                console_log!(format!("game info: {:?}", restored_info));
                 Some(restored_info)
             } else {
                 None 
@@ -153,7 +148,7 @@ impl Component for App {
                 self.game_info = None;
             }
             Msg::Ping => {
-                log!("sending ping");
+                // log!("sending ping");
                 self.api.send(Command::Ping);
             }
             Msg::ServerMessage(_) => {}
@@ -191,9 +186,8 @@ impl Component for App {
 // A macro to provide `println!(..)`-style syntax for `console.log` logging.
 
 #[wasm_bindgen]
-pub fn run_app() -> Result<(), JsValue> {
+    pub fn run_app() -> Result<(), JsValue> {
     console_error_panic_hook::set_once();
-    web_logger::init();
     yew::start_app::<App>();
     Ok(())
 }

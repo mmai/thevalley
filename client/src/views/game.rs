@@ -11,6 +11,7 @@ use yew::{
 };
 use tr::tr;
 
+use weblog::*;
 use crate::api::Api;
 use crate::components::chat_box::{ChatBox, ChatLine, ChatLineData};
 use crate::components::scores::Scores;
@@ -159,13 +160,13 @@ impl Component for GamePage {
                     self.sound_player.play("card".into());
                     let PlayEvent::Play(uuid, card) = evt;
                     self.add_chat_message(uuid, ChatLineData::Text(format!("play: {}", card.to_string())));
-                    unsafe {log!("play event {:?}", evt)};
+                    console_log!(format!("play event {:?}", evt));
                 }
                 Message::Error(e) => {
                     self.is_waiting = false;
                     self.error = Some(e.message().into());
                     self.sound_player.play("error".into());
-                    unsafe {log!("error from server {:?}", e)};
+                    // unsafe {log!("error from server {:?}", e)};
                 }
                 Message::PlayerConnected(state) => {
                     let player_id = state.player.id;

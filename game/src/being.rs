@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 use crate::cards::{Card, Suit};
 
 /// A being
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Being {
     face: Card,
     resources: BTreeMap<Suit, Card>,

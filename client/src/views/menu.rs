@@ -5,9 +5,10 @@ use yew::{
 };
 
 use tr::tr;
+use weblog::*;
 
 use crate::api::Api;
-use crate::protocol::{Command, Message};
+use crate::protocol::{Command, Message, ValleyVariant, VariantSettings};
 use crate::gprotocol::{JoinGameCommand, GameInfo, PlayerInfo};
 use crate::utils::format_join_code;
 
@@ -28,11 +29,23 @@ pub struct MenuPage {
 
 pub enum Msg {
     Ignore,
-    NewGame,
+    NewGame(ValleyVariant),
     JoinGame,
     ServerMessage(Message),
     SetJoinCode(String),
 }
+
+const VALLEY2: ValleyVariant = ValleyVariant {
+    parameters: VariantSettings { nb_players: 2 }
+};
+
+const VALLEY3: ValleyVariant = ValleyVariant {
+    parameters: VariantSettings { nb_players: 3 }
+};
+
+const VALLEY4: ValleyVariant = ValleyVariant {
+    parameters: VariantSettings { nb_players: 4 }
+};
 
 impl Component for MenuPage {
     type Message = Msg;
@@ -57,9 +70,9 @@ impl Component for MenuPage {
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
-            Msg::NewGame => {
-                log::info!("New Game");
-                self.api.send(Command::NewGame);
+            Msg::NewGame(variant) => {
+                console_log!("New Game");
+                self.api.send(Command::NewGame(variant));
             }
             Msg::JoinGame => {
                 log::info!("Join Game");
@@ -105,7 +118,9 @@ impl Component for MenuPage {
                 </div>
                 <p class="explanation">{ tr!("...or start a new game.")}</p>
                 <div class="toolbar">
-                    <button class="primary" onclick=self.link.callback(|_| Msg::NewGame)>{ tr!("New Game")}</button>
+                    <button class="primary" onclick=self.link.callback(|_| Msg::NewGame(VALLEY2))>{ tr!("New 2 players Game")}</button>
+                    <button class="primary" onclick=self.link.callback(|_| Msg::NewGame(VALLEY3))>{ tr!("New 3 players Game")}</button>
+                    <button class="primary" onclick=self.link.callback(|_| Msg::NewGame(VALLEY4))>{ tr!("New 4 players Game")}</button>
                 </div>
                 {
                     if let Some(ref error) = self.error {

@@ -1,29 +1,66 @@
 //! Player position in the table
 
 use serde::{Deserialize, Serialize};
+use std::cmp::Ordering;
 
 /// A position in the table
-#[derive(PartialEq,Clone,Copy,Debug,Serialize,Deserialize, PartialOrd, Eq, Ord)]
-pub enum PlayerPos {
+#[derive(PartialEq, Eq, Clone,Copy,Debug,Serialize,Deserialize)]
+pub struct PlayerPos {
+    pub pos: AbsolutePos,
+    pub count: u8,
+}
+
+impl Ord for PlayerPos {
+ fn cmp(&self, other: &Self) -> Ordering {
+        self.pos.cmp(&other.pos)
+    }
+}
+
+impl PartialOrd for PlayerPos {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+/// A position in the table
+#[derive(PartialEq, Eq, Clone,Copy,Debug,Serialize,Deserialize)]
+pub enum AbsolutePos {
     /// Player 0
     P0,
     /// Player 1
     P1,
-    // /// Player 2
-    // P2,
-    // /// Player 3
-    // P3,
-    // /// Player 4
-    // P4,
+    /// Player 2
+    P2,
+    /// Player 3
+    P3,
+    /// Player 4
+    P4,
 }
 
-pub const POSITIONS_LIST: [PlayerPos;2] = [
-    PlayerPos::P0,
-    PlayerPos::P1,
-    // PlayerPos::P2,
-    // PlayerPos::P3,
-    // PlayerPos::P4,
-];
+impl Ord for AbsolutePos {
+ fn cmp(&self, other: &Self) -> Ordering {
+        self.to_n().cmp(&other.to_n())
+    }
+}
+
+impl PartialOrd for AbsolutePos {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+
+impl AbsolutePos {
+    pub fn to_n(self) -> usize {
+        match self {
+            AbsolutePos::P0 => 0,
+            AbsolutePos::P1 => 1,
+            AbsolutePos::P2 => 2,
+            AbsolutePos::P3 => 3,
+            AbsolutePos::P4 => 4,
+        }
+    }
+}
 
 /// Iterates on players
 pub struct PlayerIterator {
@@ -47,41 +84,34 @@ impl Iterator for PlayerIterator {
 }
 
 impl PlayerPos {
+    pub fn new(pos: AbsolutePos, count: u8) -> Self {
+        PlayerPos { pos, count}
+    } 
+
     /// Returns the position corresponding to the number (0 => P0, ...).
     ///
     /// Panics if `n > 4`.
-    pub fn from_n(n: usize) -> Self {
-        match n {
-            0 => PlayerPos::P0,
-            1 => PlayerPos::P1,
-            // 2 => PlayerPos::P2,
-            // 3 => PlayerPos::P3,
-            // 4 => PlayerPos::P4,
+    pub fn from_n(n: usize, count: u8) -> Self {
+        let pos = match n {
+            0 => AbsolutePos::P0, 
+            1 => AbsolutePos::P1,
+            2 => AbsolutePos::P2,
+            3 => AbsolutePos::P3,
+            4 => AbsolutePos::P4,
             other => panic!("invalid pos: {}", other),
-        }
+        };
+        PlayerPos { pos, count}
     }
 
     /// Returns the number corresponding to the position.
     ///
     pub fn to_n(self) -> usize {
-        match self {
-            PlayerPos::P0 => 0,
-            PlayerPos::P1 => 1,
-            // PlayerPos::P2 => 2,
-            // PlayerPos::P3 => 3,
-            // PlayerPos::P4 => 4,
-        }
+        self.pos.to_n()
     }
 
     /// Returns the next player in line
     pub fn next(self) -> PlayerPos {
-        match self {
-            PlayerPos::P0 => PlayerPos::P1,
-            PlayerPos::P1 => PlayerPos::P0,
-            // PlayerPos::P2 => PlayerPos::P3,
-            // PlayerPos::P3 => PlayerPos::P4,
-            // PlayerPos::P4 => PlayerPos::P0,
-        }
+        PlayerPos::from_n((self.to_n() as usize + 1) % self.count as usize, self.count)
     }
 
     /// Returns the player `n` seats further
@@ -89,19 +119,15 @@ impl PlayerPos {
         if n == 0 {
             self
         } else {
-            PlayerPos::from_n((self as usize + n) % 2)
+            PlayerPos::from_n((self.to_n() as usize + n) % self.count as usize, self.count)
         }
     }
 
     /// Returns the previous player.
     pub fn prev(self) -> PlayerPos {
-        match self {
-            PlayerPos::P0 => PlayerPos::P1,
-            PlayerPos::P1 => PlayerPos::P0,
-            // PlayerPos::P2 => PlayerPos::P1,
-            // PlayerPos::P3 => PlayerPos::P2,
-            // PlayerPos::P4 => PlayerPos::P3,
-        }
+        let count = self.count as i32;
+        let pos_n = (self.to_n() as i32 + count - 1) % count;
+        PlayerPos::from_n(pos_n as usize, self.count)
     }
 
     /// Returns an iterator that iterates on `n` players, including this one.
@@ -114,8 +140,7 @@ impl PlayerPos {
 
     /// Returns the number of turns after `self` to reach `other`.
     pub fn distance_until(self, other: PlayerPos) -> usize {
-        (1 + other as usize - self as usize) % 2 + 1
-        // (4 + other as usize - self as usize) % 5 + 1
+        (self.count as usize - 1 + other.to_n() as usize - self.to_n() as usize) % self.count as usize + 1
     }
 
     /// Returns an iterator until the given player (`self` included, `other` excluded)
@@ -125,31 +150,47 @@ impl PlayerPos {
     }
 }
 
-// #[cfg(test)]
-// mod tests {
-//
-//     use super::*;
-//
-//     #[test]
-//     fn test_pos() {
-//         let mut count = [0; 5];
-//         for i in 0..5 {
-//             for pos in PlayerPos::from_n(i).until(PlayerPos::from_n(0)) {
-//                 count[pos as usize] += 1;
-//             }
-//             for pos in PlayerPos::from_n(0).until(PlayerPos::from_n(i)) {
-//                 count[pos as usize] += 1;
-//             }
-//         }
-//
-//         for c in count.iter() {
-//             assert!(*c == 6);
-//         }
-//
-//         for i in 0..5 {
-//             assert!(PlayerPos::from_n(i).next() == PlayerPos::from_n((i + 1) % 5));
-//             assert!(PlayerPos::from_n(i) == PlayerPos::from_n((i + 1) % 5).prev());
-//             assert!(PlayerPos::from_n(i).next().prev() == PlayerPos::from_n(i));
-//         }
-//     }
-// }
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    #[test]
+    fn test_pos() {
+        let count: u8 = 5;
+        let mut counts = [0; 5];
+        for i in 0..count {
+            for pos in PlayerPos::from_n(i as usize, count).until(PlayerPos::from_n(0, count)) {
+                counts[pos.pos as usize] += 1;
+            }
+            for pos in PlayerPos::from_n(0, count).until(PlayerPos::from_n(i as usize, count)) {
+                counts[pos.pos as usize] += 1;
+            }
+        }
+
+        for c in counts.iter() {
+            assert!(*c == 6);
+        }
+
+        for i in 0..count {
+            assert!(PlayerPos::from_n(i as usize, count).next() == PlayerPos::from_n((i as usize + 1) % count as usize, count));
+            assert!(PlayerPos::from_n(i as usize, count) == PlayerPos::from_n((i as usize + 1) % count as usize, count).prev());
+            assert!(PlayerPos::from_n(i as usize, count).next().prev() == PlayerPos::from_n(i as usize, count));
+        }
+    }
+
+    #[test]
+    fn test_prev() {
+        let pos = PlayerPos::from_n(1, 5);
+        let prev = pos.prev();
+
+        assert!(prev == PlayerPos::from_n(0, 5));
+    }
+
+    fn test_next() {
+        let pos = PlayerPos::from_n(4, 5);
+        let next = pos.next();
+
+        assert!(next == PlayerPos::from_n(0, 5));
+    }
+}

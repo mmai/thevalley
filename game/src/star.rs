@@ -5,6 +5,7 @@ use crate::cards::{Card, Hand};
 use crate::pos::PlayerPos;
 
 /// A star
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Star {
     pos: PlayerPos,
     majesty: u8,
