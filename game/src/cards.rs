@@ -545,10 +545,12 @@ mod tests {
         hand.add(Card::new(Suit::Club, Rank::Rank9));
         hand.add(Card::new(Suit::Club, Rank::Rank10));
         hand.add(Card::new(Suit::BlackJoker, Rank::Rank1));
+        hand.add(Card::new(Suit::RedJoker, Rank::Rank1));
 
         assert!(!hand.has_any(Suit::Heart));
         assert!(hand.has_any(Suit::Club));
         assert!(hand.has_any(Suit::BlackJoker));
+        assert!(hand.has_any(Suit::RedJoker));
     }
 
     #[test]

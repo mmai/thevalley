@@ -5,7 +5,7 @@ client:
 .PHONY: client
 
 server:
-	cd server && RUST_LOG=debug cargo run
+	cd server && RUST_BACKTRACE=1 RUST_LOG=debug cargo run
 .PHONY: server
 
 server-reload:

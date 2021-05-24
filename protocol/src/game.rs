@@ -63,7 +63,7 @@ impl GameState for ValleyGame {
     type VariantParameters = VariantSettings;
 
     fn set_variant(&mut self, variant: ValleyVariant) {
-        // self.nb_players = variant.parameters.nb_players;
+        self.nb_players = variant.parameters.nb_players;
         // self.deal = Deal::new(pos::PlayerPos::from_n(0, self.nb_players));
         // self.first = pos::PlayerPos::from_n(0, self.nb_players);
     }
@@ -139,6 +139,7 @@ impl GameState for ValleyGame {
         }
         ).collect();
         GameStateSnapshot {                                          
+            nb_players: self.nb_players,
             players,                                                 
             stars,                                                   
             hand,
@@ -205,6 +206,8 @@ impl ValleyGame {
             }).collect();
 
         stars.into_iter().for_each(|(uuid, star)| {
+                println!("star {}", star.get_hand().to_string());
+
                 self.stars.insert(uuid, star);
             });
 
@@ -253,6 +256,9 @@ impl ValleyGame {
         let mut drawn_cards = vec![];
         let mut first: Option<pos::PlayerPos> = None; // First player to play
         while !first.is_some() && !self.source.is_empty() {
+            println!("twilight, stars count: {}, source count: {}", self.stars.len(), self.source.len());
+            println!("source: {}", self.source.to_string());
+
             let mut source_cards: Vec<cards::Card> = vec![];
             for _ in 0..self.stars.len() {
                 source_cards.push(self.source.draw());
@@ -262,6 +268,7 @@ impl ValleyGame {
                 .zip(source_cards.into_iter())
                 .map(|((_, star), last_card)| {
                     star.add_to_hand(last_card);
+                    println!("last card: {}", last_card.to_string());
                     (star.get_pos(), last_card)
                 }).collect();
 
@@ -269,6 +276,10 @@ impl ValleyGame {
                 .max_by(|(_, a), (_, b)| strength(**a).cmp(&strength(**b)));
 
             first = if let Some((_, card)) = max_card {
+                println!("maxcard: {} ({})", card.to_string(), strength(*card));
+                for (_, last) in last_cards.iter() {
+                    println!("lastcard: {} ({})", last.to_string(), strength(*last));
+                }
                 //Check there is no ex-aequo
                 if last_cards.iter().any(|(_, a)| strength(*a).eq(&strength(*card))) {
                     None
@@ -278,6 +289,7 @@ impl ValleyGame {
             } else {
                 None
             };
+            println!("first {:?}", first);
 
 
             drawn_cards.push(last_cards);
@@ -317,6 +329,7 @@ pub enum PlayEvent {
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct GameStateSnapshot {
+    pub nb_players: u8,
     pub players: Vec<GamePlayerState>,     
     pub hand: cards::Hand,
     pub pos: pos::PlayerPos,
@@ -368,6 +381,7 @@ impl GameStateSnapshot {
 impl Default for GameStateSnapshot {
     fn default() -> GameStateSnapshot {
         GameStateSnapshot {
+            nb_players: 2,
             players: vec![],
             hand: cards::Hand::default(),
             pos: pos::PlayerPos { pos: pos::AbsolutePos::P0, count: 2},

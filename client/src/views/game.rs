@@ -65,19 +65,33 @@ pub enum Msg {
 
 impl GamePage {
     pub fn add_chat_message(&mut self, player_id: Uuid, data: ChatLineData) {
-        let nickname = self
+        let nickname = self.get_nickname(player_id);
+        self.chat_log
+            .push_back(Rc::new(ChatLine { nickname, data }));
+        while self.chat_log.len() > 100 {
+            self.chat_log.pop_front();
+        }
+    }
+
+    fn get_nickname(&self, player_id: Uuid) -> String {
+        self
             .game_state
             .players
             .iter()
             .find(|x| x.player.id == player_id)
             .map(|x| x.player.nickname.as_str())
             .unwrap_or("anonymous")
-            .to_string();
-        self.chat_log
-            .push_back(Rc::new(ChatLine { nickname, data }));
-        while self.chat_log.len() > 100 {
-            self.chat_log.pop_front();
+            .to_string()
+    }
+
+    fn get_game_url(&self) -> url::Url {
+        let str_url = yew::utils::document().url().unwrap();
+
+        let mut game_url = url::Url::parse(&str_url).unwrap();
+        if game_url.query_pairs().find(|(name, _)| name == "game").is_none() {
+            game_url = url::Url::parse_with_params(&str_url, &[("game", &self.game_info.join_code)]).unwrap();
         }
+        game_url
     }
 
     pub fn my_state(&self) -> &GamePlayerState {
@@ -118,12 +132,15 @@ impl Component for GamePage {
             );
 
         let on_server_message = link.callback(Msg::ServerMessage);
-        let api = Api::bridge(on_server_message);
+        let mut api = Api::bridge(on_server_message);
         let sound_paths = vec![
             ("chat".into(), "sounds/misc_menu.ogg"),
             ("card".into(), "sounds/cardPlace4.ogg"),
             ("error".into(), "sounds/negative_2.ogg"),
         ].into_iter().collect();
+
+        //XXX automatically set player ready 
+        api.send(Command::MarkReady);
 
         GamePage {
             keepalive_job: Box::new(keepalive),
@@ -231,6 +248,7 @@ impl Component for GamePage {
 
     fn view(&self) -> Html {
         if self.game_state.players.is_empty() {
+            console_log!(format!("no players..."));
             return html! {};
         }
 
@@ -255,6 +273,8 @@ impl Component for GamePage {
 
         // log!("others: {:?} others_before: {:?}", others, others_before);
         others.append(&mut others_before);
+        let players_joined_count = &others.len() + 1;
+        let players_left_count = self.game_state.nb_players as usize - players_joined_count;
 
         let mut game_classes = vec!["game"];
         if self.is_waiting {
@@ -330,19 +350,31 @@ impl Component for GamePage {
 
         <section class=actions_classes>
             {match &self.game_state.status {
-               Status::Pregame => html! {
-                <div class="wrapper">
-                    <div class="toolbar">
-                    {if !self.my_state().ready  {
-                        html! {<button class="primary" onclick=self.link.callback(|_| Msg::MarkReady)>{ tr!("Ready!")}</button>}
-                    } else {
-                        html! {}
-                    }}
-                        <button class="cancel" onclick=self.link.callback(|_| Msg::Disconnect)>{ tr!("Disconnect") }</button>
+               Status::Pregame => {
+                   let url_game: String = self.get_game_url().as_str().into();
+                   html! {
+                       <div class="wrapper">
+                       { tr!("Waiting for") }
+                       <strong>{ " " } {{ players_left_count }}{ " " } </strong>
+                       { tr!("other player") }
+                       { if players_left_count > 1 { html! {"s"} } else { html! {}} }
+                       <br/><br/>
+                       { if mypos == 0 { html! {
+                               <div>
+                                   <div class="toolbar">
+                                   {if !self.my_state().ready  {
+                                       html! {<button class="primary" onclick=self.link.callback(|_| Msg::MarkReady)>{ tr!("Ready!")}</button>}
+                                   } else {
+                                       html! {}
+                                   }}
+                                   </div>
+                                   <div>{{ tr!("Share this link to invite players:") }} </div>
+                                   <div><a href={{ url_game.clone() }}>{{ url_game }}</a></div>
+                               </div>
+                           }} else { html! {} }}
                     </div>
-                    <h1>{{ tr!("join code:") }} <strong>{format!(" {}", format_join_code(&self.game_info.join_code))}</strong></h1>
-                 </div>
-                },
+                   }
+               },
                Status::Twilight(first, cards) => {
                    let opponent_state = self.opponent_state();
                    let my_cards: Vec<&cards::Card> = cards.iter().map(|draw| draw.get(&my_state.pos).unwrap()).collect();
