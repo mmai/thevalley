@@ -112,7 +112,8 @@ pub enum Rank {
 }
 
 /// Bit RANK_MASK over all ranks
-const RANK_MASK: u64 = 16383; 
+// const RANK_MASK: u64 = 16383; 
+const RANK_MASK: u64 = 8191; 
 
 impl Rank {
     /// Returns the rank corresponding to the given number:
@@ -300,7 +301,11 @@ impl Hand {
 
     /// Returns `true` if the hand contains any card of the given suit.
     pub fn has_any(self, suit: Suit) -> bool {
-        self.0 & (RANK_MASK * suit as u64) != 0
+        match suit {
+            Suit::RedJoker => self.has(Card::new(suit, Rank::Rank1)),
+            Suit::BlackJoker => self.has(Card::new(suit, Rank::Rank1)),
+            _  =>  self.0 & (RANK_MASK * suit as u64) != 0
+        }
     }
 
     /// Returns `true` if `self` contains no card.
@@ -382,7 +387,7 @@ impl Deck {
             cards: Vec::with_capacity(54),
         };
 
-        for i in 0..53 {
+        for i in 0..54 {
             d.cards.push(Card::from_id(i));
         }
 
@@ -557,7 +562,7 @@ mod tests {
     fn test_deck() {
         let mut deck = Deck::new();
         deck.shuffle();
-        assert!(deck.len() == 54);
+        assert_eq!(deck.len(), 54);
 
         let mut count = [0; 54];
         while !deck.is_empty() {

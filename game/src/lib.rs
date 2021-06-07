@@ -11,7 +11,7 @@ pub mod being;
 pub mod star;
 
 pub const NB_PLAYERS:usize = 2;
-const DEAL_SIZE:usize = 10 ;
+const DEAL_SIZE:usize = 9 ;
 
 // Expose the module or their content directly? Still unsure.
 
@@ -28,7 +28,7 @@ pub fn deal_hands() -> ([cards::Hand; NB_PLAYERS], cards::Deck) {
     let mut source = cards::Deck::new();
     source.shuffle();    
                         
-    source.deal_each(&mut hands, 9);
+    source.deal_each(&mut hands, DEAL_SIZE);
 
     (hands, source)
 }
@@ -56,7 +56,7 @@ pub fn deal_seeded_hands(seed: [u8; 32]) -> ([cards::Hand; NB_PLAYERS], cards::D
 #[test]
 fn test_deals() {
     let (hands, source) = deal_hands();
-    assert!(source.len() == 36);
+    assert_eq!(source.len(), 36);
 
     let mut count = [0; 54];
 
@@ -64,7 +64,7 @@ fn test_deals() {
         count[card.id() as usize] += 1;
     }
     for hand in hands.iter() {
-        assert!(hand.size() == DEAL_SIZE);
+        assert_eq!(hand.size(), DEAL_SIZE);
         for card in hand.list().iter() {
             count[card.id() as usize] += 1;
         }
