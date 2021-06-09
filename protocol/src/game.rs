@@ -268,7 +268,7 @@ impl ValleyGame {
                 .zip(source_cards.into_iter())
                 .map(|((_, star), last_card)| {
                     star.add_to_hand(last_card);
-                    println!("last card: {}", last_card.to_string());
+                    // println!("last card: {}", last_card.to_string());
                     (star.get_pos(), last_card)
                 }).collect();
 
@@ -276,12 +276,13 @@ impl ValleyGame {
                 .max_by(|(_, a), (_, b)| strength(**a).cmp(&strength(**b)));
 
             first = if let Some((_, card)) = max_card {
-                println!("maxcard: {} ({})", card.to_string(), strength(*card));
-                for (_, last) in last_cards.iter() {
-                    println!("lastcard: {} ({})", last.to_string(), strength(*last));
-                }
+                // println!("maxcard: {} ({})", card.to_string(), strength(*card));
+                // for (_, last) in last_cards.iter() {
+                //     println!("lastcard: {} ({})", last.to_string(), strength(*last));
+                // }
                 //Check there is no ex-aequo
-                if last_cards.iter().any(|(_, a)| strength(*a).eq(&strength(*card))) {
+                let high_points: Vec<(&pos::PlayerPos, &cards::Card)> = last_cards.iter().filter(|(_, a)| strength(**a).eq(&strength(*card))).collect();
+                if high_points.len() > 1 {
                     None
                 } else {
                     max_card.map(|c| *c.0)
@@ -289,8 +290,6 @@ impl ValleyGame {
             } else {
                 None
             };
-            println!("first {:?}", first);
-
 
             drawn_cards.push(last_cards);
         }
