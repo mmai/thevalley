@@ -131,21 +131,21 @@ impl GameState for ValleyGame {
         players.sort_by(|a, b| a.pos.to_n().cmp(&b.pos.to_n()));
         let pos = self.players[&player_id].pos;
         let mut hand: cards::Hand = cards::Hand::default();
-        let stars = self.stars.iter().map(|(uuid, star)| {
-            if player_id == *uuid {
-                hand = star.get_hand();
-            }
-            star.make_snapshot(player_id == *uuid, &self.revealed)
-        }
-        ).collect();
+        // let stars = self.stars.iter().map(|(uuid, star)| {
+        //     if player_id == *uuid {
+        //         hand = star.get_hand();
+        //     }
+        //     star.make_snapshot(player_id == *uuid, &self.revealed)
+        // }
+        // ).collect();
         GameStateSnapshot {                                          
             nb_players: self.nb_players,
             players,                                                 
-            stars,                                                   
+            // stars,                                                   
             hand,
             pos,
             status: self.status.clone(),
-            river: self.river.clone(),
+            // river: self.river.clone(),
             source_count: self.source.len() as u8,
         }                                                            
     }                                                                
@@ -333,11 +333,10 @@ pub struct GameStateSnapshot {
     pub hand: cards::Hand,
     pub pos: pos::PlayerPos,
     pub status: Status,                               
-    pub stars: Vec<star::StarSnapshot>,
+    // pub stars: Vec<star::StarSnapshot>,
     pub source_count: u8,
-    pub river: cards::Deck,                      
+    // pub river: cards::Deck,                      
 }
-
 
 impl webgame_protocol::GameStateSnapshot for GameStateSnapshot {
 
@@ -371,9 +370,9 @@ impl GameStateSnapshot {
         }
     }
 
-    pub fn star(&self) -> &star::StarSnapshot {
-        self.stars.iter().find(|s| s.get_pos() == self.pos).unwrap()
-    }
+    // pub fn star(&self) -> &star::StarSnapshot {
+    //     self.stars.iter().find(|s| s.get_pos() == self.pos).unwrap()
+    // }
 
 }
 
@@ -385,9 +384,22 @@ impl Default for GameStateSnapshot {
             hand: cards::Hand::default(),
             pos: pos::PlayerPos { pos: pos::AbsolutePos::P0, count: 2},
             status: Status::Pregame,
-            stars: vec![],
+            // stars: vec![],
             source_count: 34,
-            river: cards::Deck::default()
+            // river: cards::Deck::default()
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    // use crate::{cards, pos};
+
+    #[test]
+    fn test_game_snapshot() {
+        let snapshot = GameStateSnapshot::default();
+        let s = serde_json::to_string(&snapshot);
+        assert!( s.is_ok());
     }
 }

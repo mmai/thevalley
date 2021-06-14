@@ -37,12 +37,12 @@ impl Star {
 
     pub fn make_snapshot(&self, with_hand: bool, revealed: &Vec<Card>) -> StarSnapshot{
         let hand = if with_hand { Some(self.hand) } else { None };
-        let beings = self.beings.iter().map(|b| b.make_snapshot(revealed)).collect();
+        // let beings = self.beings.iter().map(|b| b.make_snapshot(revealed)).collect();
         StarSnapshot {
             pos: self.pos,
             majesty: self.majesty,
             hand_count: hand.iter().len() as u8,
-            beings,
+            // beings,
         }
     }
 }
@@ -52,7 +52,7 @@ pub struct StarSnapshot {
     pos: PlayerPos,
     majesty: u8,
     hand_count: u8,
-    beings: Vec<BeingSnapshot>,
+    // beings: Vec<BeingSnapshot>,
 }
                                                   
 impl StarSnapshot {
@@ -65,9 +65,9 @@ impl StarSnapshot {
         self.majesty
     }
 
-    pub fn get_beings(&self) -> &Vec<BeingSnapshot> {
-        &self.beings
-    }
+    // pub fn get_beings(&self) -> &Vec<BeingSnapshot> {
+    //     &self.beings
+    // }
 
 }                                     
                                                   

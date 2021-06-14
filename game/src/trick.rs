@@ -99,19 +99,5 @@ mod tests {
             cards::Card::new(cards::Suit::Club, cards::Rank::Rank5)
         );
         assert_eq!( trick.winner, pos::PlayerPos::from_n(0, 2));
-
-        //Higher card
-        trick.play_card(
-            pos::PlayerPos::from_n(1,2),
-            cards::Card::new(cards::Suit::Club, cards::Rank::Rank8)
-        );
-        assert_eq!( trick.winner, pos::PlayerPos::from_n(1,2));
-
-        //Higher rank bug wrong color
-        trick.play_card(
-            pos::PlayerPos::from_n(2,2),
-            cards::Card::new(cards::Suit::Heart, cards::Rank::Rank10)
-        );
-        assert_eq!( trick.winner, pos::PlayerPos::from_n(1,2));
     }
 }

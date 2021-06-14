@@ -4,7 +4,6 @@ with lib;
 
 let
   cfg = config.services.thevalley;
-  thevalley = (import ./thevalley.nix) { pkgs = pkgs; };
 in 
   {
 
@@ -47,6 +46,38 @@ in
           '';
         };
 
+        dbUri = mkOption {
+          type = types.str;
+          default = "/var/thevalley/thevalley_db";
+          description = ''
+            thevalley database URI.
+          '';
+        };
+
+        archivesDirectory = mkOption {
+          type = types.path;
+          default = "/var/thevalley/archives";
+          description = ''
+            thevalley directory path where game archives are stored
+          '';
+        };
+
+        archivageCheck = mkOption {
+          type = types.int;
+          default = 120;
+          description = ''
+            thevalley archivage check period in minutes.
+          '';
+        };
+
+        archivageDelay = mkOption {
+          type = types.int;
+          default = 1440;
+          description = ''
+            thevalley retention period in minutes after wich games are archived
+          '';
+        };
+
       };
     };
 
@@ -73,16 +104,19 @@ in
           proxy_set_header X-Forwarded-Port $server_port;
           proxy_redirect off;
 
-          # websocket support
+          proxy_headers_hash_max_size 512;
+          proxy_headers_hash_bucket_size 128; 
+
+          # config for websockets proxying (cf. http://nginx.org/en/docs/http/websocket.html)
           proxy_http_version 1.1;
           proxy_set_header Upgrade $http_upgrade;
           proxy_set_header Connection $connection_upgrade;
         '';
-        withSSL = cfg.protocol == "http";
+        withSSL = cfg.protocol == "https";
         in {
           "${cfg.hostname}" = {
             enableACME = withSSL;
-            forceSSL = withSSL;
+            forceSSL = false;
             locations = {
               "/" = { 
                 extraConfig = proxyConfig;
@@ -93,6 +127,11 @@ in
         };
       };
 
+      systemd.tmpfiles.rules = [
+        "d ${cfg.archivesDirectory} 0755 ${cfg.user} ${cfg.group} - -"
+        "d ${cfg.dbUri} 0755 ${cfg.user} ${cfg.group} - -"
+      ];
+
       systemd.targets.thevalley = {
         description = "thevalley";
         wants = ["thevalley-server.service"];
@@ -100,7 +139,7 @@ in
       systemd.services = 
       let serviceConfig = {
         User = "${cfg.user}";
-        WorkingDirectory = "${thevalley}";
+        WorkingDirectory = "${pkgs.thevalley}";
       };
       in {
         thevalley-server = {
@@ -108,8 +147,12 @@ in
           partOf = [ "thevalley.target" ];
 
           serviceConfig = serviceConfig // { 
-            ExecStart = ''${thevalley}/bin/thevalley_server -d ${thevalley}/front/ \
-              -p ${toString cfg.apiPort}'';
+            ExecStart = ''${pkgs.thevalley}/bin/thevalley_server -d ${pkgs.thevalley-front}/ \
+              -p ${toString cfg.apiPort} -u ${cfg.dbUri} \
+              --archives-directory ${toString cfg.archivesDirectory} \
+              --archive-check ${toString cfg.archivageCheck} \
+              --archive-delay ${toString cfg.archivageDelay} \
+              '';
           };
 
           wantedBy = [ "multi-user.target" ];

@@ -3,8 +3,9 @@
 use rand::{thread_rng, SeedableRng};
 use rand::rngs::StdRng;
 use rand::seq::SliceRandom;
+use std::fmt;
 
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, Serializer};
 use std::num::Wrapping;
 use std::str::FromStr;
 use std::string::ToString;
@@ -26,6 +27,22 @@ pub enum Suit {
     BlackJoker = 1 << 53,
 }
 
+impl fmt::Display for Suit {
+   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.to_safe_string())
+    }
+}
+
+// impl Serialize for Suit {
+//     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+//     where
+//         S: Serializer,
+//     {
+//         // serializer.serialize_str(&self.to_safe_string())
+//         serializer.serialize_str(&format!("{:?}", &self))
+//     }
+// }
+//
 impl Suit {                      
     /// Returns the suit corresponding to the number:
     ///                          
@@ -464,6 +481,13 @@ impl ToString for Deck {
 mod tests {
     use super::*;
 
+    // #[test]
+    // fn test_suit() {
+    //     let suit = Suit::RedJoker;
+    //     let s = serde_json::to_string(&suit).unwrap();
+    //     assert_eq!(s, "RedJoker");
+    // }
+    
     #[test]
     fn test_card() {
         let card = Card::new(Suit::RedJoker, Rank::Rank1);
