@@ -1,14 +1,14 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE webtarot_client'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the webtarot_client package.
+# Copyright (C) YEAR THE thevalley_client'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the thevalley_client package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: webtarot_client 0.4.0\n"
+"Project-Id-Version: thevalley_client 0.1.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-09-07 08:25+0000\n"
+"POT-Creation-Date: 2021-06-26 15:29+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,16 +19,4 @@ msgstr ""
 
 #: ./src/components/chat_box.rs:101
 msgid "send some text"
-msgstr ""
-
-#: ./src/components/player_list.rs:72
-msgid " — ready"
-msgstr ""
-
-#: ./src/components/player_list.rs:80
-msgid "points : {0}"
-msgstr ""
-
-#: ./src/components/bidding_actions.rs:65
-msgid "Passe"
 msgstr ""

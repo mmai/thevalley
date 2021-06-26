@@ -42,3 +42,5 @@ js-sys = "0.3.40"
 lazy_static = "1.4.0"
 url = "2.2.0"
 chrono = "0.4.19"
+
+getrandom = { version = "0.2", features = ["js"] }

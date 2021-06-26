@@ -1,14 +1,14 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE webtarot_client'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the webtarot_client package.
+# Copyright (C) YEAR THE thevalley_client'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the thevalley_client package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: webtarot_client 0.4.0\n"
+"Project-Id-Version: thevalley_client 0.1.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-09-07 08:25+0000\n"
+"POT-Creation-Date: 2021-06-26 15:29+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,114 +17,54 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ./src/views/game.rs:280
-msgid "trick for "
-msgstr ""
-
-#: ./src/views/game.rs:294
-msgid "Contract succeded by {0} points"
-msgstr ""
-
-#: ./src/views/game.rs:296
-msgid "Contract failed by {0} points"
-msgstr ""
-
-#: ./src/views/game.rs:299
-msgid "Dog : {0}"
-msgstr ""
-
-#: ./src/views/game.rs:313
+#: ./src/views/game.rs:306
 msgid "pre-game"
 msgstr ""
 
-#: ./src/views/game.rs:314
-msgid "inter trick"
+#: ./src/views/game.rs:307
+msgid "{0} starting"
 msgstr ""
 
-#: ./src/views/game.rs:315
-msgid "inter deal"
+#: ./src/views/game.rs:308
+msgid "{0} influence"
 msgstr ""
 
-#: ./src/views/game.rs:316
-msgid "{0} bidding"
+#: ./src/views/game.rs:309
+msgid "{0} act"
 msgstr ""
 
-#: ./src/views/game.rs:317
-msgid "{0} playing"
+#: ./src/views/game.rs:310
+msgid "{0} source"
 msgstr ""
 
-#: ./src/views/game.rs:318
+#: ./src/views/game.rs:311
 msgid "end"
 msgstr ""
 
-#: ./src/views/game.rs:319
-msgid "calling king"
-msgstr ""
-
-#: ./src/views/game.rs:320
-msgid "making dog"
-msgstr ""
-
-#: ./src/views/game.rs:341
-msgid "auctions are closed"
-msgstr ""
-
-#: ./src/views/game.rs:342 ./src/views/game.rs:346
+#: ./src/views/game.rs:322
 msgid "invalid turn order"
 msgstr ""
 
-#: ./src/views/game.rs:343
-msgid "bid must be higher than current contract"
-msgstr ""
-
-#: ./src/views/game.rs:344
-msgid "the auction are still running"
-msgstr ""
-
-#: ./src/views/game.rs:345
-msgid "no contract was offered"
-msgstr ""
-
-#: ./src/views/game.rs:347
+#: ./src/views/game.rs:323
 msgid "you can only play cards you have"
 msgstr ""
 
-#: ./src/views/game.rs:348
-msgid "wrong suit played"
-msgstr ""
-
-#: ./src/views/game.rs:349
-msgid "you must use trumps"
-msgstr ""
-
-#: ./src/views/game.rs:350
-msgid "too weak trump played"
-msgstr ""
-
-#: ./src/views/game.rs:351
-msgid "you cannot play the suit of the called king in the first trick"
-msgstr ""
-
-#: ./src/views/game.rs:352
+#: ./src/views/game.rs:324
 msgid "no trick has been played yet"
 msgstr ""
 
-#: ./src/views/game.rs:386
+#: ./src/views/game.rs:357
+msgid "Waiting for"
+msgstr ""
+
+#: ./src/views/game.rs:359
+msgid "other player"
+msgstr ""
+
+#: ./src/views/game.rs:366
 msgid "Ready!"
 msgstr ""
 
-#: ./src/views/game.rs:390
-msgid "Disconnect"
-msgstr ""
-
-#: ./src/views/game.rs:392
-msgid "join code:"
-msgstr ""
-
-#: ./src/views/game.rs:435
-msgid "finish"
-msgstr ""
-
-#: ./src/views/game.rs:462
-msgid "Your turn to play!"
+#: ./src/views/game.rs:371
+msgid "Share this link to invite players:"
 msgstr ""
