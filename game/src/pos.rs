@@ -3,6 +3,9 @@
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
+use std::str::FromStr;
+use std::num::ParseIntError;
+
 /// A position in the table
 #[derive(PartialEq, Eq, Clone,Copy,Debug,Serialize,Deserialize)]
 pub struct PlayerPos {
@@ -10,9 +13,38 @@ pub struct PlayerPos {
     pub count: u8,
 }
 
+impl std::fmt::Display for PlayerPos {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}/{}", self.pos, self.count)
+    }
+}
+
 impl Ord for PlayerPos {
  fn cmp(&self, other: &Self) -> Ordering {
         self.pos.cmp(&other.pos)
+    }
+}
+
+impl FromStr for PlayerPos {
+    type Err = ParsePlayerPosError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let parts: Vec<&str> = s.split('/')
+                                 .collect();
+        let pos_fromstr = parts[0].parse::<AbsolutePos>()
+            .map_err(|_| ParsePlayerPosError)?;
+        let count_fromstr = parts[1].parse::<u8>()
+                    .map_err(|_| ParsePlayerPosError)?;
+        Ok(PlayerPos { pos: pos_fromstr, count: count_fromstr })
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct ParsePlayerPosError;
+
+impl std::fmt::Display for ParsePlayerPosError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "invalid PlayerPos representation")
     }
 }
 
@@ -23,7 +55,7 @@ impl PartialOrd for PlayerPos {
 }
 
 /// A position in the table
-#[derive(PartialEq, Eq, Clone,Copy,Debug,Serialize,Deserialize)]
+#[derive(PartialEq, Eq, Clone,Copy,Debug,Serialize,Deserialize, enum_utils::FromStr)]
 pub enum AbsolutePos {
     /// Player 0
     P0,
@@ -36,6 +68,13 @@ pub enum AbsolutePos {
     /// Player 4
     P4,
 }
+
+impl std::fmt::Display for AbsolutePos {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 
 impl Ord for AbsolutePos {
  fn cmp(&self, other: &Self) -> Ordering {

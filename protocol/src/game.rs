@@ -1,6 +1,8 @@
 use std::collections::BTreeMap;
+use std::ops::Deref;
 
 use serde::{Deserialize, Serialize};
+use serde_with::{serde_as, DisplayFromStr};
 use uuid::Uuid;
 
 use thevalley_game::{NB_PLAYERS, cards, pos, trick, being, star, strength};
@@ -16,10 +18,34 @@ pub enum Phase {
     Source,
 }
 
+/// A dealed card for each player (star)
+/// used in twilight to determine the first player
+/// there can be many if cards dealed are of same strength,
+/// thus the Vec in the Status struct to keep the history of these deals
+#[serde_as]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+pub struct StarsCards (
+    #[serde_as(as = "BTreeMap<DisplayFromStr, _>")]
+    BTreeMap<pos::PlayerPos, cards::Card>
+);
+
+impl From<BTreeMap<pos::PlayerPos, cards::Card>> for StarsCards {
+    fn from(bt: BTreeMap<pos::PlayerPos, cards::Card>) -> Self {
+        StarsCards(bt)
+    }
+}
+
+impl Deref for StarsCards {
+    type Target = BTreeMap<pos::PlayerPos, cards::Card>;
+    fn deref(&self) -> &BTreeMap<pos::PlayerPos, cards::Card> {
+        &self.0 // We just extract the inner element
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub enum Status {
     Pregame,
-    Twilight(pos::PlayerPos, Vec<BTreeMap<pos::PlayerPos, cards::Card>>),
+    Twilight(pos::PlayerPos, Vec<StarsCards>),
     Playing(pos::PlayerPos, Phase),
     Endgame,
 }
@@ -252,7 +278,8 @@ impl ValleyGame {
         }
     }
 
-    pub fn do_twilight(&mut self) -> (Option<pos::PlayerPos>, Vec<BTreeMap<pos::PlayerPos, cards::Card>>){
+    pub fn do_twilight(&mut self) -> (Option<pos::PlayerPos>, Vec<StarsCards>){
+    // pub fn do_twilight(&mut self) -> (Option<pos::PlayerPos>, Vec<BTreeMap<pos::PlayerPos, cards::Card>>){
         let mut drawn_cards = vec![];
         let mut first: Option<pos::PlayerPos> = None; // First player to play
         while !first.is_some() && !self.source.is_empty() {
@@ -264,13 +291,16 @@ impl ValleyGame {
                 source_cards.push(self.source.draw());
             }
 
-            let last_cards: BTreeMap<pos::PlayerPos, cards::Card> = self.stars.iter_mut()
+            let last_cards: StarsCards = self.stars.iter_mut()
+            // let last_cards: BTreeMap<pos::PlayerPos, cards::Card> = self.stars.iter_mut()
                 .zip(source_cards.into_iter())
                 .map(|((_, star), last_card)| {
                     star.add_to_hand(last_card);
                     // println!("last card: {}", last_card.to_string());
                     (star.get_pos(), last_card)
-                }).collect();
+                // }).collect();
+                // }).collect().into();
+                }).collect::<BTreeMap<pos::PlayerPos, cards::Card>>().into();
 
            let max_card = last_cards.iter()
                 .max_by(|(_, a), (_, b)| strength(**a).cmp(&strength(**b)));
@@ -405,9 +435,11 @@ mod tests {
         game.init_game();
 
         let snapshot = game.make_snapshot(p1_id);
+        // print!("snapshot: {:?}", snapshot);
         let s = serde_json::to_string(&snapshot);
+        print!("{:?}", s);
         assert!( s.is_ok());
 
-        print!("{}", s.unwrap());
+        // print!("{}", s.unwrap());
     }
 }

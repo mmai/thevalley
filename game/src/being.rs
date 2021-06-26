@@ -17,23 +17,23 @@ pub struct Being {
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct BeingSnapshot {
     pub face: Card,
-    // #[serde_as(as = "BTreeMap<DisplayFromStr, _>")]
-    // pub resources: BTreeMap<Suit, Option<Card>>,
+    #[serde_as(as = "BTreeMap<DisplayFromStr, _>")]
+    pub resources: BTreeMap<Suit, Option<Card>>,
     // // pub loved_one: Option<Card>,
 }
 
 impl Being {
     pub fn make_snapshot(&self, revealed: &Vec<Card>) -> BeingSnapshot {
-        // let resources = self.resources.clone().into_iter().map(|(s, c)| {
-        //     if revealed.contains(&c) { 
-        //         (s, Some(c)) 
-        //     } else { 
-        //         (s, None) 
-        //     }
-        // }).collect();
+        let resources = self.resources.clone().into_iter().map(|(s, c)| {
+            if revealed.contains(&c) { 
+                (s, Some(c)) 
+            } else { 
+                (s, None) 
+            }
+        }).collect();
         BeingSnapshot {
             face: self.face,
-            // resources,
+            resources,
         }
 
     }
